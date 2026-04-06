@@ -1,0 +1,328 @@
+/* ═══════════════════════════════════════════════════════
+   Terminal-Style Code Block
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+.code-block-terminal {
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 12px 0;
+  width: 100%;
+  max-width: 100%;
+  background: #1a1b26;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  transition: box-shadow 0.3s ease;
+}
+
+.code-block-terminal:hover {
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+/* ── Title Bar ── */
+.code-block-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 12px;
+  user-select: none;
+}
+
+/* ── macOS-style dots ── */
+.code-block-dots {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.dot:hover {
+  transform: scale(1.2);
+}
+
+.dot-red {
+  background: #ff5f56;
+  box-shadow: 0 0 6px rgba(255, 95, 86, 0.4);
+}
+
+.dot-yellow {
+  background: #ffbd2e;
+  box-shadow: 0 0 6px rgba(255, 189, 46, 0.4);
+}
+
+.dot-green {
+  background: #27c93f;
+  box-shadow: 0 0 6px rgba(39, 201, 63, 0.4);
+}
+
+/* ── Language Badge ── */
+.code-block-lang-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--lang-color, #a78bfa);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  letter-spacing: 0.3px;
+  text-transform: none;
+}
+
+.code-block-lang-badge svg {
+  opacity: 0.7;
+}
+
+/* ── Copy Button ── */
+.code-block-copy-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.code-block-copy-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.15);
+}
+
+.code-block-copy-btn:active {
+  transform: scale(0.96);
+}
+
+/* Copied state */
+.code-block-copy-btn:has(> svg:first-child[class*="lucide-check"]) {
+  color: #27c93f;
+  border-color: rgba(39, 201, 63, 0.3);
+  background: rgba(39, 201, 63, 0.08);
+}
+
+/* ── Code Body ── */
+.code-block-body {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 800px;
+  min-height: 80px;
+  background: #1a1b26;
+}
+
+/* Scrollbar styling for code blocks */
+.code-block-body::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.code-block-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-block-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  width: 6px;
+  border-radius: 3px;
+}
+
+.code-block-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Override default PrismJS container styling */
+.code-block-body pre {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.code-block-body code {
+  background: transparent !important;
+}
+
+/* ── Line highlight effect on hover ── */
+.code-block-body pre > code > span.linenumber {
+  transition: opacity 0.15s ease;
+}
+
+/* ── Inline Code (non-block) styling ── */
+.inline-code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.875em;
+  background: rgba(167, 139, 250, 0.12);
+  color: #c4b5fd;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Chat List Items (ul, ol, li)
+   ═══════════════════════════════════════════════════════ */
+
+.chat-list {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Nested lists */
+.chat-list .chat-list {
+  margin: 4px 0 4px 8px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(167, 139, 250, 0.12);
+}
+
+.chat-li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  list-style: none;
+}
+
+.chat-li:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ── Unordered List Bullet ── */
+.chat-li-marker-ul {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.35);
+}
+
+/* ── Ordered List Number ── */
+.chat-li-marker-ol {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c4b5fd;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: -0.3px;
+  margin-top: 1px;
+}
+
+.chat-li-content {
+  flex: 1;
+  line-height: 1.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .code-block-terminal {
+    border-radius: 8px;
+    margin: 8px 0;
+    min-width: 100%;
+  }
+
+  .code-block-header {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .code-block-lang-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .code-block-copy-btn span {
+    display: none; /* Hide label on mobile, just show icon */
+  }
+
+  .code-block-body pre {
+    font-size: 12px !important;
+  }
+}
+
+.chat-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0;
+  table-layout: auto;
+}
+
+.chat-tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-tr:last-child {
+  border-bottom: none;
+}
+
+.chat-td,
+.chat-th {
+  padding: 8px 12px;
+  text-align: left;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-td:last-child,
+.chat-th:last-child {
+  border-right: none;
+}
+
+.chat-th {
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+  color: #c4b5fd;
+}
+  
