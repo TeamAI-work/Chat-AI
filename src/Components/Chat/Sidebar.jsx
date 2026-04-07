@@ -1,15 +1,28 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, ChevronRight, FolderClosed, LayoutGrid, LoaderPinwheelIcon, MessageSquare, MoreHorizontal, Plus, Search } from "lucide-react"
-import { useState, useEffect } from "react"
+import { ChevronDown, ChevronRight, FolderClosed, LayoutGrid, LoaderPinwheelIcon, LogOut, MessageSquare, MoreHorizontal, Plus, Search, User } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "../../supabaseClient"
+import { useNavigate } from "react-router-dom"
 
-export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, fetchProjects, fetchProjectChats, projectChats = [], projectChatsProjectId, setProjectChatsProjectId, setProjectChats, activeChatId, setActiveChatId, activeProjectId, setActiveProjectId, activeProjectChatId, setActiveProjectChatId, onNewChat, onNewProject, onNewProjectChat }) {
+export default function Sidebar({ user, setSidebarOpen, chats, projects, fetchChats, fetchProjects, fetchProjectChats, projectChats = [], projectChatsProjectId, setProjectChatsProjectId, setProjectChats, activeChatId, setActiveChatId, activeProjectId, setActiveProjectId, activeProjectChatId, setActiveProjectChatId, onNewChat, onNewProject, onNewProjectChat }) {
 
-  // ── Close "more" menu when clicking outside ──
+  const profileref = useRef(null)
+  const navigate = useNavigate()
+  const [profileModel, setProfileModel] = useState(false)
+
+  // ── Close menus when clicking outside ──
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close chat options menu
       if (!event.target.closest('.chatmore-trigger') && !event.target.closest('.chatmore-menu')) {
         setChatMore(null);
+      }
+      
+      // Close profile modal
+      if (profileref.current && !profileref.current.contains(event.target)) {
+        if (!event.target.closest('.profile-trigger')) {
+          setProfileModel(false);
+        }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -23,28 +36,59 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
     }
   }, [activeProjectId]);
 
+  const [renamingId, setRenamingId] = useState(null)
+  const [renamingValue, setRenamingValue] = useState("")
+
+  const handleRename = async ({ projectId, chatId, projectChatId, newname }) => {
+    if (!newname.trim()) return; // avoid empty names
+    if (projectId) {
+      await supabase.from("projects").update({ project_name: newname.trim() }).eq("id", projectId)
+      fetchProjects()
+    }
+    if (chatId) {
+      await supabase.from("chats").update({ title: newname.trim() }).eq("id", chatId)
+      fetchChats()
+    }
+    if (projectChatId) {
+      await supabase.from("project-chats").update({ name: newname.trim() }).eq("id", projectChatId)
+      fetchProjectChats?.(activeProjectId)
+    }
+    setChatMore(null);
+  }
+
+  const [searchInput, setSearchInput] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const searchLower = searchTerm.trim().toLowerCase();
+
+  const filteredChats = searchLower
+    ? chats.filter(chat => chat.name?.toLowerCase().includes(searchLower))
+    : chats;
+
+  const filteredProjects = searchLower
+    ? projects.filter(project => project.name?.toLowerCase().includes(searchLower))
+    : projects;
 
   // ── Context menu (three-dot) ──
-  function ActionMenu({projectId, chatId, projectChatId}) {
+  function ActionMenu({ projectId, chatId, projectChatId, currentName }) {
 
     const handleDelete = async () => {
-      // Add optional chaining and await
-      if(projectId){
+      if (projectId) {
         await supabase.from('projects').delete().eq('id', projectId)
         fetchProjects()
-        if (activeProjectId === projectId) setActiveProjectId(null); // Clear active context if needed
+        if (activeProjectId === projectId) setActiveProjectId(null);
       }
-      if(chatId){
+      if (chatId) {
         await supabase.from('chats').delete().eq('id', chatId)
         fetchChats()
         if (activeChatId === chatId) setActiveChatId(null);
       }
-      if(projectChatId){
+      if (projectChatId) {
         await supabase.from('project-chats').delete().eq('id', projectChatId)
-        fetchProjectChats?.(activeProjectId) // Ensure we pass the id representing the context container
+        fetchProjectChats?.(activeProjectId)
         if (activeProjectChatId === projectChatId) setActiveProjectChatId(null);
       }
-      setChatMore(null); // Close menu
+      setChatMore(null);
     }
 
     return (
@@ -54,10 +98,17 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
         exit={{ opacity: 0, scale: 0.95, y: -5 }}
         className="absolute top-8 right-0 bg-[#2A2B32] text-sm text-gray-200 p-1.5 rounded-xl shadow-xl border border-white/10 w-32 flex flex-col gap-1 chatmore-menu z-50 origin-top-right backdrop-blur-md"
       >
-        <button className="text-left hover:bg-white/10 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Rename</button>
-        <button 
-        onClick={()=>{handleDelete()}}
-        className="text-left hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Delete</button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setRenamingId(projectId || chatId || projectChatId);
+            setRenamingValue(currentName || "");
+            setChatMore(null);
+          }}
+          className="text-left hover:bg-white/10 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Rename</button>
+        <button
+          onClick={() => { handleDelete() }}
+          className="text-left hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Delete</button>
       </motion.div>
     )
   }
@@ -117,9 +168,26 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
           <Plus size={18} strokeWidth={2.5} />
           New Project
         </button>
-        <button className="flex items-center justify-start gap-3 bg-white/5 hover:bg-white/10 w-full py-2 px-4 rounded-xl transition-all text-sm font-medium text-gray-300 border border-white/5">
-          <Search size={18} strokeWidth={2} />
-          Search
+        <button
+          onClick={() => setSearchInput(true)}
+          className="flex items-center justify-start gap-3 bg-white/5 hover:bg-white/10 w-full px-4 rounded-xl transition-all text-sm font-medium text-gray-300 border border-white/5 h-[42px] overflow-hidden"
+        >
+          <Search size={18} strokeWidth={2} className="shrink-0" />
+          {searchInput ? (
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onBlur={() => {
+                if (!searchTerm.trim()) setSearchInput(false)
+              }}
+              autoFocus
+              type="text"
+              placeholder="Search..."
+              className="w-full bg-transparent border-none text-gray-300 focus:outline-none placeholder-gray-500 font-normal"
+            />
+          ) : (
+            <span className="truncate">Search</span>
+          )}
         </button>
       </div>
 
@@ -148,7 +216,7 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                 transition={{ duration: 0.2 }}
                 className="space-y-0.5"
               >
-                {projects.map((project) => {
+                {filteredProjects.map((project) => {
                   const isExpanded = expandedProjects.has(project.id);
                   const isActive = activeProjectId === project.id;
 
@@ -183,12 +251,34 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                             className={`shrink-0 transition-colors ${isActive ? 'text-blue-400' : 'text-blue-400/70 group-hover:text-blue-400'}`}
                             strokeWidth={2}
                           />
-                          <input
-                            className="outline-none bg-transparent w-full truncate cursor-pointer text-sm text-gray-300 group-hover:text-gray-100 transition-colors focus:cursor-text focus:text-white"
-                            type="text"
-                            defaultValue={project.name}
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                          {renamingId === project.id ? (
+                            <input
+                              autoFocus
+                              className="outline-none bg-transparent w-full truncate cursor-text text-sm text-white border-b border-purple-500/50 pb-[1px]"
+                              type="text"
+                              value={renamingValue}
+                              onChange={(e) => setRenamingValue(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleRename({ projectId: project.id, newname: renamingValue });
+                                  setRenamingId(null);
+                                } else if (e.key === "Escape") {
+                                  setRenamingId(null);
+                                }
+                              }}
+                              onBlur={() => {
+                                if (renamingValue !== project.name) {
+                                  handleRename({ projectId: project.id, newname: renamingValue });
+                                }
+                                setRenamingId(null);
+                              }}
+                            />
+                          ) : (
+                            <span className="outline-none bg-transparent w-full truncate cursor-pointer text-sm text-gray-300 group-hover:text-gray-100 transition-colors">
+                              {project.name || 'Untitled'}
+                            </span>
+                          )}
                         </div>
 
                         {/* Three-dot menu */}
@@ -202,7 +292,7 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                           <MoreHorizontal size={15} />
                         </button>
                         <AnimatePresence>
-                          {chatMore === project.id && <ActionMenu projectId={project.id} />}
+                          {chatMore === project.id && <ActionMenu projectId={project.id} currentName={project.name} />}
                         </AnimatePresence>
                       </div>
 
@@ -243,7 +333,31 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                                   >
                                     <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
                                       <MessageSquare size={13} className="shrink-0" strokeWidth={2} />
-                                      <span className="truncate">{pc.name || 'Untitled'}</span>
+                                      {renamingId === pc.id ? (
+                                        <input
+                                          autoFocus
+                                          type="text"
+                                          value={renamingValue}
+                                          onChange={(e) => setRenamingValue(e.target.value)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                              handleRename({ projectChatId: pc.id, newname: renamingValue });
+                                              setRenamingId(null);
+                                            } else if (e.key === "Escape") {
+                                              setRenamingId(null);
+                                            }
+                                          }}
+                                          onBlur={() => {
+                                            if (renamingValue !== pc.name) {
+                                              handleRename({ projectChatId: pc.id, newname: renamingValue });
+                                            }
+                                            setRenamingId(null);
+                                          }}
+                                          className="bg-transparent border-none outline-none text-white w-full border-b border-purple-500/50 pb-[1px]"
+                                        />
+                                      ) : (
+                                        <span className="truncate">{pc.name || 'Untitled'}</span>
+                                      )}
                                     </div>
                                     <button
                                       className="chatmore-trigger z-10 p-1 opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded-lg shrink-0 transition-all text-gray-400 hover:text-white"
@@ -255,7 +369,7 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                                       <MoreHorizontal size={13} />
                                     </button>
                                     <AnimatePresence>
-                                      {chatMore === pc.id && <ActionMenu projectChatId={pc.id} />}
+                                      {chatMore === pc.id && <ActionMenu projectChatId={pc.id} currentName={pc.name} />}
                                     </AnimatePresence>
                                   </div>
                                 ))
@@ -287,22 +401,18 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
           <AnimatePresence initial={false}>
             {chatOpen && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+                animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+                exit={{ height: 0, opacity: 0, overflow: "hidden" }}
                 transition={{ duration: 0.2 }}
-                className="space-y-0.5 overflow-hidden"
+                className="space-y-0.5"
               >
-                {chats.map((chat) => (
+                {filteredChats.map((chat) => (
                   <div
                     key={chat.id}
                     onClick={() => {
                       setActiveChatId(chat.id)
-                      setActiveProjectId(null)
-                      toggleProjectExpand(new Set())
-                      setActiveProjectChatId(null)
-                      setProjectChats([])
-                      setProjectChatsProjectId(null)
+                      setExpandedProjects(new Set())
                     }}
                     className={`group flex justify-between relative items-center cursor-pointer hover:bg-white/5 w-full py-2 px-3 rounded-xl transition-colors shrink-0 ${activeChatId === chat.id ? 'bg-white/10 ring-1 ring-white/10' : ''}`}
                   >
@@ -312,12 +422,31 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                         className={`shrink-0 transition-colors ${activeChatId === chat.id ? 'text-purple-300' : 'text-purple-400/80 group-hover:text-purple-400'}`}
                         strokeWidth={2}
                       />
-                      <input
-                        className={`outline-none bg-transparent w-full truncate cursor-pointer text-sm transition-colors focus:cursor-text focus:text-white ${activeChatId === chat.id ? 'text-gray-100 font-medium' : 'text-gray-300 group-hover:text-gray-100'}`}
-                        type="text"
-                        value={chat.name}
-                        readOnly
-                      />
+                      {renamingId === chat.id ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={renamingValue}
+                          onChange={(e) => setRenamingValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleRename({ chatId: chat.id, newname: renamingValue });
+                              setRenamingId(null);
+                            } else if (e.key === "Escape") {
+                              setRenamingId(null);
+                            }
+                          }}
+                          onBlur={() => {
+                            if (renamingValue !== chat.name) {
+                              handleRename({ chatId: chat.id, newname: renamingValue });
+                            }
+                            setRenamingId(null);
+                          }}
+                          className="bg-transparent border-none outline-none text-white w-full border-b border-purple-500/50 pb-[1px]"
+                        />
+                      ) : (
+                        <span className="truncate text-[15px] text-gray-300 group-hover:text-gray-100 transition-colors">{chat.name || 'Untitled'}</span>
+                      )}
                     </div>
                     <button
                       className="chatmore-trigger z-10 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded-lg shrink-0 transition-all text-gray-400 hover:text-white"
@@ -329,7 +458,7 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
                       <MoreHorizontal size={16} />
                     </button>
                     <AnimatePresence>
-                      {chatMore === `chat-${chat.id}` && <ActionMenu chatId={chat.id} />}
+                      {chatMore === `chat-${chat.id}` && <ActionMenu chatId={chat.id} currentName={chat.name} />}
                     </AnimatePresence>
                   </div>
                 ))}
@@ -339,6 +468,53 @@ export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, f
         </div>
 
       </div>
+
+      {/* ── User Profile Section ── */}
+      <div className="p-4 mt-auto border-t relative border-white/5">
+        <div onClick={() => setProfileModel(!profileModel)} className="profile-trigger flex items-center gap-3 w-full hover:bg-white/5 p-2 rounded-xl cursor-pointer transition-all">
+          <div className="w-9 h-9 shrink-0 bg-gradient-to-tr from-green-500 to-emerald-400 rounded-full flex items-center justify-center text-white font-semibold text-[15px] shadow-lg shadow-green-500/20">
+            {user?.email ? user.email.charAt(0).toUpperCase() : <User size={16} />}
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-[14px] font-medium text-gray-200 truncate">{user?.email || "User"}</span>
+            <span className="text-[11px] text-gray-500">Free Plan</span>
+          </div>
+          <MoreHorizontal size={16} className="text-gray-500 hover:text-gray-300" />
+        </div>
+
+        <div className="absolute z-50">
+            {
+              profileModel && (
+                <motion.div
+                ref={profileref}
+                initial={{opacity: 0, y: 10}}
+                animate={{opacity: 1, y: 0}}
+                exit={{opacity: 0, y: 10}}
+                transition={{duration: 0.3}}
+                className="absolute bottom-full left-0 mb-20 w-64 bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+                  <div className="p-4">
+                    <div className="flex items-center flex-col gap-3">
+                      <div className="w-10 h-10 shrink-0 bg-gradient-to-tr from-green-500 to-emerald-400 rounded-full flex items-center justify-center text-white font-semibold text-[15px] shadow-lg shadow-green-500/20">
+                        {user?.email ? user.email.charAt(0).toUpperCase() : <User size={16} />}
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="text-[14px] font-medium text-gray-200 truncate">{user?.email || "User"}</span>
+                        <span className="text-[11px] text-gray-500">Free Plan</span>
+                      </div>
+                      <button 
+                      onClick={()=>{supabase.auth.signOut(); navigate("/auth")}}
+                      className="text-red-500 hover:text-red-100 flex items-center gap-2 hover:bg-red-500 p-2 rounded-lg transition-colors">
+                        <LogOut size={16} /> Log Out
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            }
+        </div>
+      </div>
+
+
     </motion.div>
   )
 }

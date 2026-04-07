@@ -19,7 +19,7 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     try:
         model_to_use = request.model or os.getenv("OLLAMA_MODEL") or "llama3"
-        print(f"🚀 Using Ollama model: {model_to_use}")
+        # print(f"🚀 Using Ollama model: {model_to_use}")
         response = ollama.chat(model=model_to_use, messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": request.message},

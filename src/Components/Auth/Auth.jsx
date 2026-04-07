@@ -1,17 +1,18 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, Sparkles, Loader2, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Sparkles, Loader2, ArrowRight, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function Auth() {
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [username, setUsername] = useState("")
     const [isSignUp, setIsSignUp] = useState(false)
     const [error, setError] = useState(null)
     const [message, setMessage] = useState(null)
-    
+
     const navigate = useNavigate()
 
     const handleAuth = async (e) => {
@@ -19,15 +20,32 @@ export default function Auth() {
         setLoading(true)
         setError(null)
         setMessage(null)
-        
+
         try {
             if (isSignUp) {
                 const { error } = await supabase.auth.signUp({
                     email,
+                    username,
                     password,
                 })
                 if (error) throw error
                 setMessage('Registration successful! Please check your email for a verification link.')
+                const {error:signInError} = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+                if (signInError) throw signInError
+
+                const { data: user } = await supabase.auth.getUser()
+                const { error: profileError } = await supabase
+                    .from('users')
+                    .insert({
+                        user_id: user.id,
+                        username: username,
+                    })
+
+                if (profileError) throw profileError
+                navigate("/")
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
                     email,
@@ -49,7 +67,7 @@ export default function Auth() {
             <div className="absolute top-0 left-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
@@ -71,11 +89,11 @@ export default function Auth() {
                 {/* Main Auth Card */}
                 <div className="bg-[#2A2B32]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
                     <form onSubmit={handleAuth} className="space-y-5">
-                        
+
                         {/* Auth Feedback Banners */}
                         <AnimatePresence mode="popLayout">
                             {error && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     exit={{ opacity: 0, height: 0 }}
@@ -85,7 +103,7 @@ export default function Auth() {
                                 </motion.div>
                             )}
                             {message && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     exit={{ opacity: 0, height: 0 }}
@@ -98,6 +116,23 @@ export default function Auth() {
 
                         {/* Input Fields */}
                         <div className="space-y-4">
+                            {
+                                isSignUp && (
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <User size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="w-full bg-[#1E1F22] border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/30 transition-all text-sm"
+                                            placeholder="Username"
+                                        />
+                                    </div>
+                                )
+                            }
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <Mail size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />

@@ -128,6 +128,9 @@ export default function ChatPage() {
     const handleSelectChat = (chatId) => {
         setActiveChatId(chatId);
         setActiveProjectId(null);   // leave project context
+        setActiveProjectChatId(null);
+        setProjectChats([]);
+        setProjectChatsProjectId(null);
         setActiveMessages([]);
     };
 
@@ -314,6 +317,7 @@ export default function ChatPage() {
                             className="h-full w-[280px] pt-6 flex flex-col shrink-0"
                         >
                             <Sidebar
+                                user={user}
                                 setSidebarOpen={setSidebarOpen}
                                 chats={chats}
                                 projects={projects}

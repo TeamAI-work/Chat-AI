@@ -202,6 +202,7 @@ const ChatInput = memo(function ChatInput({ onSend, disabled }) {
         </button>
 
         <textarea
+          autoFocus
           rows={1}
           placeholder="Message Chat AI..."
           className="w-full bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none overflow-y-auto max-h-40 min-h-[44px] py-3 text-[15px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full"
@@ -268,7 +269,7 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden">
-      <div className="py-5 relative flex gap-2.5 text-center align-middle items-center select-none">
+      <div className="py-5 pl-5 relative flex gap-2.5 text-center align-middle items-center select-none">
         <div
           onClick={() => setModelChange(!modelChange)}
           className="flex items-center gap-2 hover:bg-white/5 transition-colors p-2 px-3 rounded-xl cursor-pointer text-gray-200 border border-transparent hover:border-white/10 relative z-10"
@@ -305,12 +306,11 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
                     className={`flex items-center gap-3 hover:bg-white/10 transition-colors p-3 rounded-lg cursor-pointer text-gray-200 relative group ${selectedModel === model ? "border border-white/10 bg-white/5" : ""}`}
                     onClick={() => { setModelChange(false); setSelectedModel(model) }}
                   >
-                    <div className={`${
-                      model === "gpt-oss:120b-cloud" ? "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300" : 
-                      model === "deepseek-v3.1:671b-cloud" ? "bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30 group-hover:text-purple-300" : 
-                      model === "kimi-k2-thinking:cloud" ? "bg-green-500/20 text-green-400 group-hover:bg-green-500/30 group-hover:text-green-300" : 
-                      "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300"
-                    } p-2 rounded-lg transition-colors`}>
+                    <div className={`${model === "gpt-oss:120b-cloud" ? "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300" :
+                        model === "deepseek-v3.1:671b-cloud" ? "bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30 group-hover:text-purple-300" :
+                          model === "kimi-k2-thinking:cloud" ? "bg-green-500/20 text-green-400 group-hover:bg-green-500/30 group-hover:text-green-300" :
+                            "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300"
+                      } p-2 rounded-lg transition-colors`}>
                       {
                         model === "gpt-oss:120b-cloud" ? <Bot size={18} /> : model === "deepseek-v3.1:671b-cloud" ? <Zap size={18} /> : model === "kimi-k2-thinking:cloud" ? <Atom size={18} /> : <Bot size={18} />
                       }
