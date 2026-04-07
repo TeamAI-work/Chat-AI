@@ -44,10 +44,12 @@ export default function ChatPage() {
 
     // ── 2. Fetch regular chats ───────────────────────────────────────────────
     const fetchChats = async (userId) => {
+        const queryUserId = userId || user?.id;
+        if (!queryUserId) return;
         const { data, error } = await supabase
             .from('chats')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', queryUserId)
             .order('created_at', { ascending: false });
 
         if (!error && data) {
@@ -59,10 +61,12 @@ export default function ChatPage() {
 
     // ── 3. Fetch projects ────────────────────────────────────────────────────
     const fetchProjects = async (userId) => {
+        const queryUserId = userId || user?.id;
+        if (!queryUserId) return;
         const { data, error } = await supabase
             .from('projects')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', queryUserId)
             .order('created_at', { ascending: false });
 
         if (!error && data) {
@@ -85,21 +89,24 @@ export default function ChatPage() {
     }, [activeChatId]);
 
     // ── 5. Fetch project chat list when a project is selected ─────────────────
+    const fetchProjectChats = async (projectId) => {
+        if (!projectId) return;
+        const { data, error } = await supabase
+            .from('project-chats')
+            .select('id, name, created_at')
+            .eq('project_id', projectId)
+            .order('created_at', { ascending: false });
+        if (!error && data) {
+            setProjectChats(data);
+            setProjectChatsProjectId(projectId); // remember which project these belong to
+            if (data.length > 0) setActiveProjectChatId(data[0].id);
+        }
+    };
+
     useEffect(() => {
-        if (!activeProjectId) return;
-        const load = async () => {
-            const { data, error } = await supabase
-                .from('project-chats')
-                .select('id, name, created_at')
-                .eq('project_id', activeProjectId)
-                .order('created_at', { ascending: false });
-            if (!error && data) {
-                setProjectChats(data);
-                setProjectChatsProjectId(activeProjectId); // remember which project these belong to
-                if (data.length > 0) setActiveProjectChatId(data[0].id);
-            }
-        };
-        load();
+        if (activeProjectId) {
+            fetchProjectChats(activeProjectId);
+        }
     }, [activeProjectId]);
 
     // ── 5b. Load messages for the selected project chat session ───────────────
@@ -198,7 +205,7 @@ export default function ChatPage() {
     };
 
     // ── 10. Send message ──────────────────────────────────────────────────────
-    const handleSendMessage = async (content) => {
+    const handleSendMessage = async (content, selectedModel) => {
         const inProjectContext = !!activeProjectId;
         const inChat = !!activeChatId;
         if (!inProjectContext && !inChat) return;
@@ -248,7 +255,7 @@ export default function ChatPage() {
             const response = await fetch("http://localhost:8000/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: content }),
+                body: JSON.stringify({ message: content, model: selectedModel }),
             });
             const data = await response.json();
             const aiContent = data.response;
@@ -310,6 +317,9 @@ export default function ChatPage() {
                                 setSidebarOpen={setSidebarOpen}
                                 chats={chats}
                                 projects={projects}
+                                fetchChats={fetchChats}
+                                fetchProjects={fetchProjects}
+                                fetchProjectChats={fetchProjectChats}
                                 projectChats={projectChats}
                                 projectChatsProjectId={projectChatsProjectId}
                                 activeChatId={activeChatId}
