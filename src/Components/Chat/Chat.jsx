@@ -17,6 +17,10 @@ import {
   Copy,
   Check,
   Share,
+  ChevronDown,
+  Bot,
+  Zap,
+  Atom,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -233,6 +237,13 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
   const endOfMessagesRef = useRef(null);
   const [copiedText, setCopiedText] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [modelChange, setModelChange] = useState(false)
+  const [selectedModel, setSelectedModel] = useState("deepseek-v3.1:671b-cloud")
+  const models = [
+    "deepseek-v3.1:671b-cloud",
+    "gpt-oss:120b-cloud",
+    "kimi-k2-thinking:cloud"
+  ]
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -257,6 +268,64 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden">
+      <div className="py-5 relative flex gap-2.5 text-center align-middle items-center select-none">
+        <div
+          onClick={() => setModelChange(!modelChange)}
+          className="flex items-center gap-2 hover:bg-white/5 transition-colors p-2 px-3 rounded-xl cursor-pointer text-gray-200 border border-transparent hover:border-white/10 relative z-10"
+        >
+          <div className="text-[18px] font-medium flex items-center gap-2">
+            Chat AI
+            <span className="text-[12px] font-normal text-gray-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+              {
+                selectedModel === "gpt-oss:120b-cloud" ? "gpt-oss" : selectedModel === "deepseek-v3.1:671b-cloud" ? "deepseek-v3.1" : selectedModel === "kimi-k2-thinking:cloud" ? "kimi-k2" : ""
+              }
+            </span>
+          </div>
+          <div>
+            <ChevronDown
+              size={18}
+              className={`transition-transform duration-300 text-gray-400 ${modelChange ? "rotate-180" : ""}`}
+            />
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {modelChange && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full left-0 mt-2 z-50 bg-[#2A2B32]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 min-w-[260px]"
+            >
+              <div className="flex flex-col gap-1">
+                {models.map((model) => (
+                  <div
+                    key={model}
+                    className={`flex items-center gap-3 hover:bg-white/10 transition-colors p-3 rounded-lg cursor-pointer text-gray-200 relative group ${selectedModel === model ? "border border-white/10 bg-white/5" : ""}`}
+                    onClick={() => { setModelChange(false); setSelectedModel(model) }}
+                  >
+                    <div className={`${
+                      model === "gpt-oss:120b-cloud" ? "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300" : 
+                      model === "deepseek-v3.1:671b-cloud" ? "bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30 group-hover:text-purple-300" : 
+                      model === "kimi-k2-thinking:cloud" ? "bg-green-500/20 text-green-400 group-hover:bg-green-500/30 group-hover:text-green-300" : 
+                      "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300"
+                    } p-2 rounded-lg transition-colors`}>
+                      {
+                        model === "gpt-oss:120b-cloud" ? <Bot size={18} /> : model === "deepseek-v3.1:671b-cloud" ? <Zap size={18} /> : model === "kimi-k2-thinking:cloud" ? <Atom size={18} /> : <Bot size={18} />
+                      }
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[14px] font-medium text-white">{model}</span>
+                      <span className="text-[11px] text-gray-400 line-clamp-1">{model === "gpt-oss:120b-cloud" ? "Fast & capable for most tasks" : model === "deepseek-v3.1:671b-cloud" ? "Most advanced & robust reasoning" : model === "kimi-k2-thinking:cloud" ? "Most advanced & robust reasoning" : "Most advanced & robust reasoning"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       {messages.length === 0 ? (
         // Centered "New Chat" View
         <div className="flex-1 flex flex-col items-center justify-center w-full px-4 mb-20">
@@ -272,7 +341,7 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
             </p>
           </div>
           <div className="w-full">
-            <ChatInput onSend={onSendMessage} disabled={isThinking} />
+            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} />
           </div>
         </div>
       ) : (
@@ -331,7 +400,7 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
 
           {/* Sticky bottom input */}
           <div className="w-full shrink-0 px-4 pb-2 pt-10 bg-gradient-to-t from-[#1E1F22] via-[#1E1F22] to-transparent">
-            <ChatInput onSend={onSendMessage} disabled={isThinking} />
+            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} />
           </div>
         </>
       )}

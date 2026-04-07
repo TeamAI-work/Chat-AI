@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, ChevronRight, FolderClosed, LayoutGrid, LoaderPinwheelIcon, MessageSquare, MoreHorizontal, Plus, Search } from "lucide-react"
 import { useState, useEffect } from "react"
+import { supabase } from "../../supabaseClient"
 
-export default function Sidebar({ setSidebarOpen, chats, projects, projectChats = [], projectChatsProjectId, activeChatId, setActiveChatId, activeProjectId, setActiveProjectId, activeProjectChatId, setActiveProjectChatId, onNewChat, onNewProject, onNewProjectChat }) {
+export default function Sidebar({ setSidebarOpen, chats, projects, fetchChats, fetchProjects, fetchProjectChats, projectChats = [], projectChatsProjectId, setProjectChatsProjectId, setProjectChats, activeChatId, setActiveChatId, activeProjectId, setActiveProjectId, activeProjectChatId, setActiveProjectChatId, onNewChat, onNewProject, onNewProjectChat }) {
 
   // ── Close "more" menu when clicking outside ──
   useEffect(() => {
@@ -22,8 +23,30 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
     }
   }, [activeProjectId]);
 
+
   // ── Context menu (three-dot) ──
-  function ActionMenu() {
+  function ActionMenu({projectId, chatId, projectChatId}) {
+
+    const handleDelete = async () => {
+      // Add optional chaining and await
+      if(projectId){
+        await supabase.from('projects').delete().eq('id', projectId)
+        fetchProjects()
+        if (activeProjectId === projectId) setActiveProjectId(null); // Clear active context if needed
+      }
+      if(chatId){
+        await supabase.from('chats').delete().eq('id', chatId)
+        fetchChats()
+        if (activeChatId === chatId) setActiveChatId(null);
+      }
+      if(projectChatId){
+        await supabase.from('project-chats').delete().eq('id', projectChatId)
+        fetchProjectChats?.(activeProjectId) // Ensure we pass the id representing the context container
+        if (activeProjectChatId === projectChatId) setActiveProjectChatId(null);
+      }
+      setChatMore(null); // Close menu
+    }
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: -5 }}
@@ -32,7 +55,9 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
         className="absolute top-8 right-0 bg-[#2A2B32] text-sm text-gray-200 p-1.5 rounded-xl shadow-xl border border-white/10 w-32 flex flex-col gap-1 chatmore-menu z-50 origin-top-right backdrop-blur-md"
       >
         <button className="text-left hover:bg-white/10 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Rename</button>
-        <button className="text-left hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Delete</button>
+        <button 
+        onClick={()=>{handleDelete()}}
+        className="text-left hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg cursor-pointer transition-colors w-full font-medium">Delete</button>
       </motion.div>
     )
   }
@@ -136,7 +161,10 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
                       >
                         {/* Per-project chevron */}
                         <button
-                          onClick={(e) => toggleProjectExpand(e, project.id)}
+                          onClick={(e) => {
+                            toggleProjectExpand(e, project.id)
+                            setActiveProjectId(project.id)
+                          }}
                           className="p-0.5 rounded text-gray-500 hover:text-gray-300 transition-colors shrink-0"
                         >
                           {isExpanded
@@ -147,7 +175,10 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
 
                         <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
                           <FolderClosed
-                            onClick={(e) => toggleProjectExpand(e, project.id)}
+                            onClick={(e) => {
+                              toggleProjectExpand(e, project.id)
+                              setActiveProjectId(project.id)
+                            }}
                             size={15}
                             className={`shrink-0 transition-colors ${isActive ? 'text-blue-400' : 'text-blue-400/70 group-hover:text-blue-400'}`}
                             strokeWidth={2}
@@ -171,7 +202,7 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
                           <MoreHorizontal size={15} />
                         </button>
                         <AnimatePresence>
-                          {chatMore === project.id && <ActionMenu />}
+                          {chatMore === project.id && <ActionMenu projectId={project.id} />}
                         </AnimatePresence>
                       </div>
 
@@ -179,11 +210,10 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
                       <AnimatePresence initial={false}>
                         {isExpanded && (
                           <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
+                            initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+                            animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+                            exit={{ height: 0, opacity: 0, overflow: "hidden" }}
                             transition={{ duration: 0.18 }}
-                            className="overflow-hidden"
                           >
                             <div className="ml-[22px] pl-3 border-l border-white/[0.07] py-0.5">
                               {/* + New chat inside project — only show for the active project */}
@@ -205,14 +235,28 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
                                   <div
                                     key={pc.id}
                                     onClick={(e) => { e.stopPropagation(); setActiveProjectChatId(pc.id); }}
-                                    className={`group flex items-center gap-2 cursor-pointer w-full py-1.5 px-2.5 rounded-lg transition-colors text-[13px]
+                                    className={`group relative flex items-center justify-between cursor-pointer w-full py-1.5 px-2.5 rounded-lg transition-colors text-[13px]
                                       ${activeProjectChatId === pc.id
                                         ? 'bg-purple-500/10 text-purple-300 ring-1 ring-purple-500/20'
                                         : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                                       }`}
                                   >
-                                    <MessageSquare size={13} className="shrink-0" strokeWidth={2} />
-                                    <span className="truncate">{pc.name || 'Untitled'}</span>
+                                    <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
+                                      <MessageSquare size={13} className="shrink-0" strokeWidth={2} />
+                                      <span className="truncate">{pc.name || 'Untitled'}</span>
+                                    </div>
+                                    <button
+                                      className="chatmore-trigger z-10 p-1 opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded-lg shrink-0 transition-all text-gray-400 hover:text-white"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setChatMore(pc.id === chatMore ? null : pc.id);
+                                      }}
+                                    >
+                                      <MoreHorizontal size={13} />
+                                    </button>
+                                    <AnimatePresence>
+                                      {chatMore === pc.id && <ActionMenu projectChatId={pc.id} />}
+                                    </AnimatePresence>
                                   </div>
                                 ))
                               )}
@@ -252,7 +296,14 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
                 {chats.map((chat) => (
                   <div
                     key={chat.id}
-                    onClick={() => setActiveChatId(chat.id)}
+                    onClick={() => {
+                      setActiveChatId(chat.id)
+                      setActiveProjectId(null)
+                      toggleProjectExpand(new Set())
+                      setActiveProjectChatId(null)
+                      setProjectChats([])
+                      setProjectChatsProjectId(null)
+                    }}
                     className={`group flex justify-between relative items-center cursor-pointer hover:bg-white/5 w-full py-2 px-3 rounded-xl transition-colors shrink-0 ${activeChatId === chat.id ? 'bg-white/10 ring-1 ring-white/10' : ''}`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
@@ -278,7 +329,7 @@ export default function Sidebar({ setSidebarOpen, chats, projects, projectChats 
                       <MoreHorizontal size={16} />
                     </button>
                     <AnimatePresence>
-                      {chatMore === `chat-${chat.id}` && <ActionMenu />}
+                      {chatMore === `chat-${chat.id}` && <ActionMenu chatId={chat.id} />}
                     </AnimatePresence>
                   </div>
                 ))}
