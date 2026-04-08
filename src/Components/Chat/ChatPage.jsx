@@ -5,6 +5,7 @@ import { Menu, Sparkle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import ThinkingModel from "./ThinkingModel";
 
 export default function ChatPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -23,10 +24,12 @@ export default function ChatPage() {
     const [projectChats, setProjectChats] = useState([]);           // session list for the sidebar
     const [projectChatsProjectId, setProjectChatsProjectId] = useState(null); // which project those chats belong to
     const [activeProjectChatId, setActiveProjectChatId] = useState(null);
+    const [isThinking, setIsThinking] = useState(false)
+    const [thinkngText, setThinkngText] = useState("")
+    const [storedThinkingText, setStoredThinkingText] = useState("")
 
     // Shared message display
     const [activeMessages, setActiveMessages] = useState([]);
-    const [isThinking, setIsThinking] = useState(false);
 
     const navigate = useNavigate();
 
@@ -255,36 +258,120 @@ export default function ChatPage() {
 
         // Call AI
         try {
+            console.log("[AI] Sending to model:", selectedModel, "| message:", content.slice(0, 50));
             const response = await fetch("http://localhost:8000/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: content, model: selectedModel }),
             });
-            const data = await response.json();
-            const aiContent = data.response;
 
-            setActiveMessages(prev => [...prev, { id: Date.now() + 1, role: "ai", content: aiContent }]);
+            console.log("[AI] Response status:", response.status, response.statusText);
 
-            // Persist AI message
-            if (inProjectContext) {
-                const { error: aiErr } = await supabase
-                    .from('project-chat-messages')
-                    .insert({ chat_id: resolvedProjectChatId, role: "ai", content: aiContent });
-                if (aiErr) console.error("[project-chat-messages] AI insert error:", aiErr);
-            } else {
-                await supabase.from('messages').insert({
-                    chat_id: activeChatId,
-                    role: "ai",
-                    content: aiContent,
-                });
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error("[AI] Error body:", errText);
+                throw new Error(`HTTP ${response.status}: ${errText}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let done = false;
+
+            let rawBuffer = "";
+            let finalDisplayContent = "";
+            let finalThinkContent = "";
+            const aiMessageId = Date.now() + 1;
+
+            setThinkngText(""); // Reset thinking text for new message
+            setStoredThinkingText("");
+
+            let firstChunkReceived = false;
+
+            while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+                if (value) {
+                    if (!firstChunkReceived) {
+                        setActiveMessages(prev => [...prev, { id: aiMessageId, role: "ai", content: "", thinking: "" }]);
+                        setIsThinking(false);
+                        firstChunkReceived = true;
+                    }
+                    const chunk = decoder.decode(value, { stream: true });
+                    rawBuffer += chunk;
+                    
+                    let parsedContent = rawBuffer;
+                    let parsedThink = "";
+
+                    let startIdx = parsedContent.indexOf("<think>");
+                    while (startIdx !== -1) {
+                        let endIdx = parsedContent.indexOf("</think>", startIdx);
+                        if (endIdx !== -1) {
+                            parsedThink += parsedContent.substring(startIdx + 7, endIdx) + "\n";
+                            parsedContent = parsedContent.substring(0, startIdx) + parsedContent.substring(endIdx + 8);
+                        } else {
+                            parsedThink += parsedContent.substring(startIdx + 7);
+                            parsedContent = parsedContent.substring(0, startIdx);
+                            break;
+                        }
+                        startIdx = parsedContent.indexOf("<think>");
+                    }
+                    
+                    finalDisplayContent = parsedContent;
+                    finalThinkContent = parsedThink.trim();
+
+                    setActiveMessages(prev => prev.map(msg => msg.id === aiMessageId
+                        ? { ...msg, content: parsedContent, thinking: parsedThink.trim() || msg.thinking }
+                        : msg
+                    ));
+                    if (parsedThink.trim() !== "") {
+                        setThinkngText(parsedThink.trim());
+                        setStoredThinkingText(parsedThink.trim());
+                    }
+                }
+            }
+
+            // After streaming, ensure the final content is properly trimmed and state is updated once more
+            if (finalDisplayContent === "") {
+                finalDisplayContent = rawBuffer; // Fallback in case something went very wrong with parsing
+            }
+
+            // Persist AI message — non-fatal, log errors but don't crash the chat
+            try {
+                if (inProjectContext) {
+                    const { error: aiErr } = await supabase
+                        .from('project-chat-messages')
+                        .insert({ chat_id: resolvedProjectChatId, role: "ai", content: finalDisplayContent });
+                    if (aiErr) console.error("[persist] project-chat-messages AI insert error:", aiErr);
+                } else if (activeChatId) {
+                    const { error: aiErr } = await supabase.from('messages').insert({
+                        chat_id: activeChatId,
+                        role: "ai",
+                        content: finalDisplayContent,
+                    });
+                    if (aiErr) console.error("[persist] messages AI insert error:", aiErr);
+                }
+            } catch (persistErr) {
+                console.error("[persist] Supabase error (non-fatal):", persistErr);
             }
         } catch (err) {
-            console.error("AI fetch error:", err);
-            setActiveMessages(prev => [...prev, {
-                id: Date.now() + 1,
-                role: "ai",
-                content: "⚠️ Something went wrong. Please try again.",
-            }]);
+            console.error("[AI] Stream error:", err.message, err.stack);
+            
+            // Revert optimistic set if we added an empty message but failed immediately
+            const wasEmptyRendered = activeMessages.some(m => m.id === Date.now() + 1); // rough check
+            
+            setActiveMessages(prev => {
+                // If the last message is an empty AI response, replace it. 
+                // Or simply append the error message if the previous response was already fully successful
+                const last = prev[prev.length - 1];
+                if (last && last.role === 'ai' && last.content === '') {
+                   return prev.map((msg, i) => i === prev.length - 1 ? { ...msg, content: `⚠️ Error: ${err.message}` } : msg);
+                }
+                return [...prev, {
+                    id: Date.now() + 1,
+                    role: "ai",
+                    content: `⚠️ Error: ${err.message}`,
+                }];
+            });
         } finally {
             setIsThinking(false);
         }
@@ -370,15 +457,36 @@ export default function ChatPage() {
             </motion.div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-[#1E1F22] to-[#25262B] relative shadow-inner">
-                <div className="flex-1 w-full z-10 flex flex-col relative overflow-hidden">
+            <div className="flex-1 flex overflow-hidden bg-gradient-to-br from-[#1E1F22] to-[#25262B] relative shadow-inner">
+                <div className="flex-1 flex flex-col relative overflow-hidden">
                     <Chat
                         activeChat={activeChat}
                         messages={activeMessages}
                         onSendMessage={handleSendMessage}
                         isThinking={isThinking}
+                        thinkingText={thinkngText}
+                        onViewThinking={(text) => {
+                            setThinkngText(text);
+                            setStoredThinkingText(text);
+                        }}
                     />
                 </div>
+
+                {/* Thinking Model Sidebar — slides in from the right inside the chat area */}
+                <AnimatePresence>
+                    {thinkngText.trim() !== "" && (
+                        <motion.div
+                            key="thinking-panel"
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 360, opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1.0] }}
+                            className="shrink-0 h-full border-l border-white/5 bg-[#14141a] overflow-hidden"
+                        >
+                            <ThinkingModel text={storedThinkingText} isStreaming={isThinking} onClose={() => setThinkngText("")} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

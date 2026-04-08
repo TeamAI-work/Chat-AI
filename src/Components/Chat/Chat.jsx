@@ -21,6 +21,15 @@ import {
   Bot,
   Zap,
   Atom,
+  Video,
+  File,
+  Image,
+  Lightbulb,
+  Telescope,
+  Globe,
+  X,
+  BrainCircuit,
+  Plus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -102,7 +111,7 @@ function useMarkdownComponents() {
 }
 
 // ─── Single message bubble (memoised — only re-renders if its own props change) ─
-const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onShare }) {
+const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onShare, onViewThinking }) {
   const mdComponents = useMarkdownComponents();
 
   return (
@@ -121,6 +130,18 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
 
       {/* Message Bubble */}
       <div className="min-w-0 max-w-[75%]">
+
+        {/* View thinking chip — only for AI messages that have thinking content */}
+        {msg.role === "ai" && msg.thinking && (
+          <button
+            onClick={() => onViewThinking?.(msg.thinking)}
+            className="mb-2 flex items-center gap-1.5 text-[12px] text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 px-3 py-1 rounded-full transition-all group"
+          >
+            <BrainCircuit size={12} className="group-hover:rotate-12 transition-transform" />
+            View thinking
+          </button>
+        )}
+
         <div
           className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed shadow-sm w-full overflow-x-auto
             ${msg.role === "user"
@@ -165,8 +186,9 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
 
 // ─── Input box — isolated component with its OWN state ───────────────────────
 // Typing here never causes the message list to re-render.
-const ChatInput = memo(function ChatInput({ onSend, disabled }) {
+const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, setSelectedModel }) {
   const [value, setValue] = useState("");
+  const [uploadModel, setUploadModel] = useState(false)
 
   const handleChange = (e) => {
     setValue(e.target.value);
@@ -189,40 +211,128 @@ const ChatInput = memo(function ChatInput({ onSend, disabled }) {
 
   const isEmpty = value.trim() === "";
 
+
+  const [thinking, setThinking] = useState(false)
+  const [deepThinking, setDeepThinking] = useState(false)
+  const [webSearch, setWebSearch] = useState(false)
+  const uploadRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (uploadRef.current && !uploadRef.current.contains(event.target)) {
+        setUploadModel(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   return (
     <div className="max-w-4xl mx-auto w-full">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="relative bg-[#2A2B32]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl flex items-end gap-2 focus-within:ring-1 focus-within:ring-purple-500/50 transition-all"
-      >
-        <button className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0">
-          <Paperclip size={20} />
-        </button>
-
-        <textarea
-          autoFocus
-          rows={1}
-          placeholder="Message Chat AI..."
-          className="w-full bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none overflow-y-auto max-h-40 min-h-[44px] py-3 text-[15px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full"
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-        />
-
-        <button
-          onClick={handleSend}
-          disabled={disabled}
-          className={`p-3 rounded-xl transition-all shadow-lg shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
-            ${isEmpty || disabled
-              ? "text-gray-400 hover:text-white hover:bg-white/5 bg-transparent shadow-none"
-              : "text-white bg-gradient-to-tr from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 active:scale-95"
-            }`}
+      <div className="bg-[#2A2B32]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl focus-within:ring-1 focus-within:ring-purple-500/50 transition-all">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative  flex items-end gap-2 "
         >
-          {isEmpty ? <Mic size={20} /> : <Send size={20} className="ml-0.5" />}
-        </button>
-      </motion.div>
+          <button
+            onClick={() => { setUploadModel(!uploadModel) }}
+            className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0">
+            <Plus size={20} />
+          </button>
+
+          <textarea
+            autoFocus
+            rows={1}
+            placeholder="Message Chat AI..."
+            className="w-full bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none overflow-y-auto max-h-40 min-h-[44px] py-3 text-[15px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full"
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+          />
+
+          <button
+            onClick={handleSend}
+            disabled={disabled}
+            className={`p-3 rounded-xl transition-all shadow-lg shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
+            ${isEmpty || disabled
+                ? "text-gray-400 hover:text-white hover:bg-white/5 bg-transparent shadow-none"
+                : "text-white bg-gradient-to-tr from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 active:scale-95"
+              }`}
+          >
+            <Send/>
+          </button>
+          <div
+            ref={uploadRef}
+            className={`upload-model absolute ${uploadModel ? "" : "hidden"} -top-45 px-3 py-4 left-0 bg-[#2c2c31] backdrop-blur-xl rounded-2xl p-2 shadow-2xl flex items-end gap-2 focus-within:ring-1 focus-within:ring-purple-500/50 transition-all`}>
+            <div className="flex flex-col gap-2">
+              <div>
+                <input id="file-upload" type="file" className="hidden" accept=".jpg, .png, .jpeg" />
+                <label htmlFor="file-upload" className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
+                  <Paperclip size={15} /> Add Photos & Files
+                </label>
+              </div>
+              <div className="w-full h-[1px] bg-white/20" />
+              <div
+                onClick={() => {
+                  if (!thinking && !deepThinking && !webSearch) {
+                    setThinking(true)
+                    setSelectedModel("glm-5.1:cloud")
+                    setUploadModel(false)
+                  }
+                }}
+                className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
+                <Lightbulb size={15} /> Thinking
+              </div>
+              <div
+                onClick={() => {
+                  if (!thinking) {
+                    setDeepThinking(true)
+                    setSelectedModel("deepseek-v3.1:671b-cloud")
+                    setUploadModel(false)
+                  }
+                }}
+                className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
+                <Telescope size={15} /> Deep Research
+              </div>
+              <div
+                onClick={() => {
+                  setWebSearch(true)
+                  setSelectedModel("deepseek-v3.1:671b-cloud")
+                  setUploadModel(false)
+                }}
+                className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
+                <Globe size={15} /> Web Search
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        <div className="flex justify-start gap-2 shrink mt-2">
+          {thinking && <div className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-full bg-purple-500/30 cursor-pointer">
+            <Lightbulb size={15} /> Thinking
+            <X size={15} onClick={() => {
+              setThinking(false)
+              setSelectedModel("deepseek-v3.1:671b-cloud")
+            }} />
+          </div>}
+          {deepThinking && <div className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-full bg-green-500/30 cursor-pointer">
+            <Telescope size={15} /> Deep Research
+            <X size={15} onClick={() => {
+              setDeepThinking(false)
+              setSelectedModel("deepseek-v3.1:671b-cloud")
+            }} />
+          </div>}
+          {webSearch && <div className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-full bg-blue-500/30 cursor-pointer">
+            <Globe size={15} /> Web Search
+            <X size={15} onClick={() => {
+              setWebSearch(false)
+              setSelectedModel("gpt-oss:120b-cloud")
+            }} />
+          </div>}
+        </div>
+      </div>
+
 
       <div className="text-center mt-3">
         <span className="text-[11px] text-gray-500 font-medium">
@@ -234,7 +344,7 @@ const ChatInput = memo(function ChatInput({ onSend, disabled }) {
 });
 
 // ─── Main Chat component ──────────────────────────────────────────────────────
-export default function Chat({ activeChat, messages = [], onSendMessage, isThinking = false }) {
+export default function Chat({ activeChat, messages = [], onSendMessage, isThinking = false, thinkingText, onViewThinking }) {
   const endOfMessagesRef = useRef(null);
   const [copiedText, setCopiedText] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
@@ -243,8 +353,20 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
   const models = [
     "deepseek-v3.1:671b-cloud",
     "gpt-oss:120b-cloud",
-    "kimi-k2-thinking:cloud"
+    "glm-5.1:cloud"
   ]
+
+  const modelRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modelRef.current && !modelRef.current.contains(event.target)) {
+        setModelChange(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -276,9 +398,9 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
         >
           <div className="text-[18px] font-medium flex items-center gap-2">
             Chat AI
-            <span className="text-[12px] font-normal text-gray-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+            <span className="text-[12px] font-normal text-gray-400 px-2 py-0.5 rounded-full">
               {
-                selectedModel === "gpt-oss:120b-cloud" ? "gpt-oss" : selectedModel === "deepseek-v3.1:671b-cloud" ? "deepseek-v3.1" : selectedModel === "kimi-k2-thinking:cloud" ? "kimi-k2" : ""
+                selectedModel === "gpt-oss:120b-cloud" ? "gpt-oss" : selectedModel === "deepseek-v3.1:671b-cloud" ? "deepseek-v3.1" : selectedModel === "glm-5.1:cloud" ? "GLM-5.1" : ""
               }
             </span>
           </div>
@@ -297,6 +419,7 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -5 }}
               transition={{ duration: 0.2 }}
+              ref={modelRef}
               className="absolute top-full left-0 mt-2 z-50 bg-[#2A2B32]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 min-w-[260px]"
             >
               <div className="flex flex-col gap-1">
@@ -306,15 +429,6 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
                     className={`flex items-center gap-3 hover:bg-white/10 transition-colors p-3 rounded-lg cursor-pointer text-gray-200 relative group ${selectedModel === model ? "border border-white/10 bg-white/5" : ""}`}
                     onClick={() => { setModelChange(false); setSelectedModel(model) }}
                   >
-                    <div className={`${model === "gpt-oss:120b-cloud" ? "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300" :
-                        model === "deepseek-v3.1:671b-cloud" ? "bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30 group-hover:text-purple-300" :
-                          model === "kimi-k2-thinking:cloud" ? "bg-green-500/20 text-green-400 group-hover:bg-green-500/30 group-hover:text-green-300" :
-                            "bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30 group-hover:text-blue-300"
-                      } p-2 rounded-lg transition-colors`}>
-                      {
-                        model === "gpt-oss:120b-cloud" ? <Bot size={18} /> : model === "deepseek-v3.1:671b-cloud" ? <Zap size={18} /> : model === "kimi-k2-thinking:cloud" ? <Atom size={18} /> : <Bot size={18} />
-                      }
-                    </div>
                     <div className="flex flex-col text-left">
                       <span className="text-[14px] font-medium text-white">{model}</span>
                       <span className="text-[11px] text-gray-400 line-clamp-1">{model === "gpt-oss:120b-cloud" ? "Fast & capable for most tasks" : model === "deepseek-v3.1:671b-cloud" ? "Most advanced & robust reasoning" : model === "kimi-k2-thinking:cloud" ? "Most advanced & robust reasoning" : "Most advanced & robust reasoning"}</span>
@@ -341,7 +455,7 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
             </p>
           </div>
           <div className="w-full">
-            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} />
+            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
           </div>
         </div>
       ) : (
@@ -357,13 +471,14 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
                     copiedText={copiedText}
                     onCopy={copyToClipboard}
                     onShare={openShare}
+                    onViewThinking={onViewThinking}
                   />
                 ))}
               </AnimatePresence>
 
               {/* AI Thinking Bubble */}
               <AnimatePresence>
-                {isThinking && (
+                {isThinking ? (
                   <motion.div
                     key="thinking"
                     initial={{ opacity: 0, y: 15 }}
@@ -375,23 +490,17 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
                     <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex justify-center items-center shadow-lg shadow-purple-900/30 ring-1 ring-white/10 mt-1">
                       <Sparkles size={18} className="text-white" />
                     </div>
-                    <div className="px-5 py-4 rounded-2xl rounded-tl-sm bg-[#202123]/60 backdrop-blur-md border border-white/5 shadow-sm flex items-center gap-2">
-                      {[0, 1, 2].map((i) => (
-                        <motion.span
-                          key={i}
-                          className="block w-2 h-2 rounded-full bg-gradient-to-tr from-purple-400 to-blue-400"
-                          animate={{ y: [0, -6, 0], opacity: [0.5, 1, 0.5] }}
-                          transition={{
-                            duration: 0.9,
-                            repeat: Infinity,
-                            delay: i * 0.18,
-                            ease: "easeInOut",
-                          }}
-                        />
-                      ))}
-                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="bg-white w-4 h-4 rounded-full animate-pulse"></div>
+                    </motion.div>
                   </motion.div>
-                )}
+                ) : null}
               </AnimatePresence>
 
               <div ref={endOfMessagesRef} className="h-4" />
@@ -400,7 +509,7 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
 
           {/* Sticky bottom input */}
           <div className="w-full shrink-0 px-4 pb-2 pt-10 bg-gradient-to-t from-[#1E1F22] via-[#1E1F22] to-transparent">
-            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} />
+            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
           </div>
         </>
       )}
