@@ -10,12 +10,14 @@ load_dotenv()
 
 router = APIRouter()
 
-from typing import Optional
+from typing import Optional, List
 
 # Pydantic model to parse incoming JSON body
 class ChatRequest(BaseModel):
     message: str
     model: Optional[str] = None
+    mode: Optional[str] = None
+    history: Optional[List[dict]] = None
 
 def _collect_ollama_chunks(model_to_use: str, messages: list) -> list:
     """Run the blocking ollama stream and collect all chunks synchronously."""
@@ -27,10 +29,27 @@ def _collect_ollama_chunks(model_to_use: str, messages: list) -> list:
 async def stream_ollama_async(request: ChatRequest):
     """Async generator: runs blocking ollama.chat in a thread, then yields processed tokens."""
     model_to_use = request.model or os.getenv("OLLAMA_MODEL") or "llama3"
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": request.message},
-    ]
+    mode = request.mode or "default"
+    
+    if mode == "thinking":
+        custome_msg = "You are a highly analytical assistant. Provide deep, step-by-step reasoning for every query. Wrap your internal thoughts in <think> tags."
+    elif mode == "research":
+        custome_msg = "You are a research expert. Provide comprehensive, well-structured, and verified information. Focus on depth and accuracy."
+    elif mode == "web":
+        custome_msg = "You are an assistant with real-time web access capabilities. Focus on providing up-to-date and relevant information from the web."
+    else:
+        custome_msg = "You are a helpful and concise AI assistant."
+    messages = [{"role": "system", "content": custome_msg}]
+    
+    # Add history messages
+    if request.history:
+        for msg in request.history:
+            # Map 'ai' role to 'assistant' for Ollama compatibility
+            role = "assistant" if msg.get("role") == "ai" else msg.get("role", "user")
+            messages.append({"role": role, "content": msg.get("content", "")})
+            
+    # Add current message
+    messages.append({"role": "user", "content": request.message})
     
     in_think_block = False
     

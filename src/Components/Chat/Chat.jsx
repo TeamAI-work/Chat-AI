@@ -2,371 +2,40 @@ import React, {
   useState,
   useRef,
   useEffect,
-  useMemo,
-  memo,
-  createContext,
-  useContext,
   useCallback,
 } from "react";
 import {
-  Send,
-  Paperclip,
-  User,
-  Mic,
   Sparkles,
-  Copy,
-  Check,
-  Share,
   ChevronDown,
-  Bot,
-  Zap,
-  Atom,
-  Video,
-  File,
-  Image,
-  Lightbulb,
-  Telescope,
-  Globe,
-  X,
-  BrainCircuit,
-  Plus,
+  Loader,
+  LoaderCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import CodeBlock from "./CodeBlock";
-import TableBlock from "./TableBlock";
+import MessageBubble from "./MessageBubble";
+import ChatInput from "./ChatInput";
 import ShareModal from "./ShareModal";
-
-const TableContext = createContext(false);
-
-// ─── Markdown component map (stable reference via useMemo per message) ───────
-function useMarkdownComponents() {
-  return useMemo(
-    () => ({
-      code({ node, inline, className, children, ...props }) {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const inTable = useContext(TableContext);
-        const match = /language-(\w+)/.exec(className || "");
-        if (!inline || inTable) {
-          const lang = match ? match[1] : "text";
-          return <CodeBlock language={lang}>{children}</CodeBlock>;
-        }
-        return (
-          <code
-            className="font-mono text-[0.875em] bg-[rgba(167,139,250,0.12)] text-[#c4b5fd] px-[7px] py-[2px] rounded-[5px] border border-[rgba(167,139,250,0.15)] font-medium whitespace-nowrap max-h-[100px] overflow-y-auto"
-            {...props}
-          >
-            {children}
-          </code>
-        );
-      },
-      ul({ children }) {
-        return (
-          <ul className="my-2 p-0 list-none flex flex-col gap-1.5 [&_ul]:mt-1 [&_ul]:mb-1 [&_ul]:ml-2 [&_ul]:pl-3 [&_ul]:border-l-2 [&_ul]:border-[rgba(167,139,250,0.12)]">
-            {children}
-          </ul>
-        );
-      },
-      ol({ children }) {
-        return (
-          <ol className="my-2 p-0 list-none flex flex-col gap-1.5 [&_ol]:mt-1 [&_ol]:mb-1 [&_ol]:ml-2 [&_ol]:pl-3 [&_ol]:border-l-2 [&_ol]:border-[rgba(167,139,250,0.12)]">
-            {children}
-          </ol>
-        );
-      },
-      li({ children, index, ordered }) {
-        return (
-          <li className="flex items-start gap-2.5 px-2.5 py-[5px] rounded-lg list-none transition-colors hover:bg-white/3">
-            {ordered ? (
-              <span className="shrink-0 min-w-[22px] h-[22px] flex items-center justify-center text-[11px] font-semibold text-[#c4b5fd] bg-[rgba(167,139,250,0.1)] border border-[rgba(167,139,250,0.15)] rounded-md font-mono tracking-[-0.3px] mt-px">
-                {`${(index ?? 0) + 1}.`}
-              </span>
-            ) : (
-              <span className="shrink-0 w-1.5 h-1.5 mt-2 rounded-full bg-linear-to-br from-[#a78bfa] to-[#818cf8] shadow-[0_0_6px_rgba(167,139,250,0.35)]" />
-            )}
-            <span className="flex-1 leading-[1.6]">{children}</span>
-          </li>
-        );
-      },
-      table({ children }) {
-        return (
-          <TableContext.Provider value={true}>
-            <TableBlock>{children}</TableBlock>
-          </TableContext.Provider>
-        );
-      },
-      tr({ children }) {
-        return <tr className="border-b border-white/6 last:border-b-0">{children}</tr>;
-      },
-      td({ children }) {
-        return <td className="px-3 py-2 text-left border-r border-white/6 last:border-r-0">{children}</td>;
-      },
-      th({ children }) {
-        return <th className="px-3 py-2 text-left border-r border-white/6 last:border-r-0 bg-white/4 font-semibold text-[#c4b5fd]">{children}</th>;
-      },
-    }),
-    [] // stable — never needs to change
-  );
-}
-
-// ─── Single message bubble (memoised — only re-renders if its own props change) ─
-const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onShare, onViewThinking }) {
-  const mdComponents = useMarkdownComponents();
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`flex gap-4 w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-    >
-      {/* AI Avatar */}
-      {msg.role === "ai" && (
-        <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex justify-center items-center shadow-lg shadow-purple-900/30 ring-1 ring-white/10 mt-1">
-          <Sparkles size={18} className="text-white" />
-        </div>
-      )}
-
-      {/* Message Bubble */}
-      <div className="min-w-0 max-w-[75%]">
-
-        {/* View thinking chip — only for AI messages that have thinking content */}
-        {msg.role === "ai" && msg.thinking && (
-          <button
-            onClick={() => onViewThinking?.(msg.thinking)}
-            className="mb-2 flex items-center gap-1.5 text-[12px] text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 px-3 py-1 rounded-full transition-all group"
-          >
-            <BrainCircuit size={12} className="group-hover:rotate-12 transition-transform" />
-            View thinking
-          </button>
-        )}
-
-        <div
-          className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed shadow-sm w-full overflow-x-auto
-            ${msg.role === "user"
-              ? "bg-gradient-to-br from-[#2D2E36] to-[#25262B] text-gray-100 rounded-tr-sm border border-white/5"
-              : "text-gray-200 rounded-tl-sm"
-            }`}
-        >
-          <div className="whitespace-pre-wrap break-words min-w-0">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-              {msg.content}
-            </ReactMarkdown>
-          </div>
-        </div>
-
-        <div className="mt-2">
-          <button
-            className="p-2 rounded-xl mb-1 ml-1 transition-all text-gray-500 hover:text-white"
-            onClick={() => onCopy(msg.content, msg.id)}
-            title="Copy message"
-          >
-            {copiedText === msg.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
-          </button>
-          <button
-            className="p-2 rounded-xl mb-1 ml-1 transition-all text-gray-500 hover:text-white"
-            onClick={onShare}
-            title="Share message"
-          >
-            <Share size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* User Avatar */}
-      {msg.role === "user" && (
-        <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-tr from-gray-600 to-gray-700 flex justify-center items-center shadow-md ring-1 ring-white/10 mt-1">
-          <User size={18} className="text-white" />
-        </div>
-      )}
-    </motion.div>
-  );
-});
-
-// ─── Input box — isolated component with its OWN state ───────────────────────
-// Typing here never causes the message list to re-render.
-const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, setSelectedModel }) {
-  const [value, setValue] = useState("");
-  const [uploadModel, setUploadModel] = useState(false)
-
-  const handleChange = (e) => {
-    setValue(e.target.value);
-    e.target.style.height = "inherit";
-    e.target.style.height = `${e.target.scrollHeight}px`;
-  };
-
-  const handleSend = () => {
-    if (!value.trim() || disabled) return;
-    onSend(value);
-    setValue("");
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const isEmpty = value.trim() === "";
-
-
-  const [thinking, setThinking] = useState(false)
-  const [deepThinking, setDeepThinking] = useState(false)
-  const [webSearch, setWebSearch] = useState(false)
-  const uploadRef = useRef(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (uploadRef.current && !uploadRef.current.contains(event.target)) {
-        setUploadModel(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  return (
-    <div className="max-w-4xl mx-auto w-full">
-      <div className="bg-[#2A2B32]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl focus-within:ring-1 focus-within:ring-purple-500/50 transition-all">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="relative  flex items-end gap-2 "
-        >
-          <button
-            onClick={() => { setUploadModel(!uploadModel) }}
-            className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors shrink-0">
-            <Plus size={20} />
-          </button>
-
-          <textarea
-            autoFocus
-            rows={1}
-            placeholder="Message Chat AI..."
-            className="w-full bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none overflow-y-auto max-h-40 min-h-[44px] py-3 text-[15px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full"
-            value={value}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-          />
-
-          <button
-            onClick={handleSend}
-            disabled={disabled}
-            className={`p-3 rounded-xl transition-all shadow-lg shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
-            ${isEmpty || disabled
-                ? "text-gray-400 hover:text-white hover:bg-white/5 bg-transparent shadow-none"
-                : "text-white bg-gradient-to-tr from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 active:scale-95"
-              }`}
-          >
-            <Send/>
-          </button>
-          <div
-            ref={uploadRef}
-            className={`upload-model absolute ${uploadModel ? "" : "hidden"} -top-45 px-3 py-4 left-0 bg-[#2c2c31] backdrop-blur-xl rounded-2xl p-2 shadow-2xl flex items-end gap-2 focus-within:ring-1 focus-within:ring-purple-500/50 transition-all`}>
-            <div className="flex flex-col gap-2">
-              <div>
-                <input id="file-upload" type="file" className="hidden" accept=".jpg, .png, .jpeg" />
-                <label htmlFor="file-upload" className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
-                  <Paperclip size={15} /> Add Photos & Files
-                </label>
-              </div>
-              <div className="w-full h-[1px] bg-white/20" />
-              <div
-                onClick={() => {
-                  if (!thinking && !deepThinking && !webSearch) {
-                    setThinking(true)
-                    setSelectedModel("glm-5.1:cloud")
-                    setUploadModel(false)
-                  }
-                }}
-                className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
-                <Lightbulb size={15} /> Thinking
-              </div>
-              <div
-                onClick={() => {
-                  if (!thinking) {
-                    setDeepThinking(true)
-                    setSelectedModel("deepseek-v3.1:671b-cloud")
-                    setUploadModel(false)
-                  }
-                }}
-                className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
-                <Telescope size={15} /> Deep Research
-              </div>
-              <div
-                onClick={() => {
-                  setWebSearch(true)
-                  setSelectedModel("deepseek-v3.1:671b-cloud")
-                  setUploadModel(false)
-                }}
-                className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-lg cursor-pointer">
-                <Globe size={15} /> Web Search
-              </div>
-            </div>
-          </div>
-        </motion.div>
-        <div className="flex justify-start gap-2 shrink mt-2">
-          {thinking && <div className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-full bg-purple-500/30 cursor-pointer">
-            <Lightbulb size={15} /> Thinking
-            <X size={15} onClick={() => {
-              setThinking(false)
-              setSelectedModel("deepseek-v3.1:671b-cloud")
-            }} />
-          </div>}
-          {deepThinking && <div className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-full bg-green-500/30 cursor-pointer">
-            <Telescope size={15} /> Deep Research
-            <X size={15} onClick={() => {
-              setDeepThinking(false)
-              setSelectedModel("deepseek-v3.1:671b-cloud")
-            }} />
-          </div>}
-          {webSearch && <div className="flex items-center gap-2 hover:bg-white/10 px-2 py-1 rounded-full bg-blue-500/30 cursor-pointer">
-            <Globe size={15} /> Web Search
-            <X size={15} onClick={() => {
-              setWebSearch(false)
-              setSelectedModel("gpt-oss:120b-cloud")
-            }} />
-          </div>}
-        </div>
-      </div>
-
-
-      <div className="text-center mt-3">
-        <span className="text-[11px] text-gray-500 font-medium">
-          Chat AI can make mistakes. Consider verifying critical information.
-        </span>
-      </div>
-    </div>
-  );
-});
+import { MODELS, DEFAULT_MODEL } from "../../config/models";
 
 // ─── Main Chat component ──────────────────────────────────────────────────────
 export default function Chat({ activeChat, messages = [], onSendMessage, isThinking = false, thinkingText, onViewThinking }) {
   const endOfMessagesRef = useRef(null);
   const [copiedText, setCopiedText] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [modelChange, setModelChange] = useState(false)
-  const [selectedModel, setSelectedModel] = useState("deepseek-v3.1:671b-cloud")
-  const models = [
-    "deepseek-v3.1:671b-cloud",
-    "gpt-oss:120b-cloud",
-    "glm-5.1:cloud"
-  ]
+  const [modelChange, setModelChange] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL.id);
+  const models = MODELS;
 
-  const modelRef = useRef(null)
+  const modelRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modelRef.current && !modelRef.current.contains(event.target)) {
-        setModelChange(false)
+        setModelChange(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -394,20 +63,18 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
       <div className="py-5 pl-5 relative flex gap-2.5 text-center align-middle items-center select-none">
         <div
           onClick={() => setModelChange(!modelChange)}
-          className="flex items-center gap-2 hover:bg-white/5 transition-colors p-2 px-3 rounded-xl cursor-pointer text-gray-200 border border-transparent hover:border-white/10 relative z-10"
+          className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors p-2 px-3 rounded-xl cursor-pointer text-gray-800 dark:text-gray-200 border border-transparent hover:border-gray-200 dark:hover:border-white/10 relative z-10"
         >
           <div className="text-[18px] font-medium flex items-center gap-2">
             Chat AI
-            <span className="text-[12px] font-normal text-gray-400 px-2 py-0.5 rounded-full">
-              {
-                selectedModel === "gpt-oss:120b-cloud" ? "gpt-oss" : selectedModel === "deepseek-v3.1:671b-cloud" ? "deepseek-v3.1" : selectedModel === "glm-5.1:cloud" ? "GLM-5.1" : ""
-              }
+            <span className="text-[12px] font-normal text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
+              {MODELS.find(m => m.id === selectedModel)?.shortName || ""}
             </span>
           </div>
           <div>
             <ChevronDown
               size={18}
-              className={`transition-transform duration-300 text-gray-400 ${modelChange ? "rotate-180" : ""}`}
+              className={`transition-transform duration-300 text-gray-500 dark:text-gray-400 ${modelChange ? "rotate-180" : ""}`}
             />
           </div>
         </div>
@@ -420,18 +87,20 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
               exit={{ opacity: 0, scale: 0.95, y: -5 }}
               transition={{ duration: 0.2 }}
               ref={modelRef}
-              className="absolute top-full left-0 mt-2 z-50 bg-[#2A2B32]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 min-w-[260px]"
+              className="absolute top-full left-0 mt-2 z-50 bg-white/95 dark:bg-[#2A2B32]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl p-2 min-w-[260px]"
             >
               <div className="flex flex-col gap-1">
                 {models.map((model) => (
                   <div
-                    key={model}
-                    className={`flex items-center gap-3 hover:bg-white/10 transition-colors p-3 rounded-lg cursor-pointer text-gray-200 relative group ${selectedModel === model ? "border border-white/10 bg-white/5" : ""}`}
-                    onClick={() => { setModelChange(false); setSelectedModel(model) }}
+                    key={model.id}
+                    className={`flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors p-3 rounded-lg cursor-pointer text-gray-800 dark:text-gray-200 relative group ${selectedModel === model.id ? "border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5" : ""}`}
+                    onClick={() => { setModelChange(false); setSelectedModel(model.id); }}
                   >
                     <div className="flex flex-col text-left">
-                      <span className="text-[14px] font-medium text-white">{model}</span>
-                      <span className="text-[11px] text-gray-400 line-clamp-1">{model === "gpt-oss:120b-cloud" ? "Fast & capable for most tasks" : model === "deepseek-v3.1:671b-cloud" ? "Most advanced & robust reasoning" : model === "kimi-k2-thinking:cloud" ? "Most advanced & robust reasoning" : "Most advanced & robust reasoning"}</span>
+                      <span className="text-[14px] font-medium text-gray-900 dark:text-white">{model.name}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                        {model.description}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -440,79 +109,71 @@ export default function Chat({ activeChat, messages = [], onSendMessage, isThink
           )}
         </AnimatePresence>
       </div>
-      {messages.length === 0 ? (
-        // Centered "New Chat" View
-        <div className="flex-1 flex flex-col items-center justify-center w-full px-4 mb-20">
-          <div className="flex flex-col items-center justify-center opacity-70 animate-pulse mb-8">
-            <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-4 rounded-full mb-6">
-              <Sparkles size={40} className="text-white" />
+
+      <div className="flex-1 w-full overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="w-full max-w-5xl mx-auto pt-4 pb-8 px-4 flex flex-col gap-6">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-70 animate-pulse">
+              <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-4 rounded-full mb-6">
+                <Sparkles size={40} className="text-white" />
+              </div>
+              <h2 className="text-3xl font-light text-gray-800 dark:text-white mb-2 tracking-wide text-center">
+                How can I help you today?
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                Enter a prompt below to start &apos;{activeChat?.name || "New Chat"}&apos;.
+              </p>
             </div>
-            <h2 className="text-3xl font-light text-white mb-2 tracking-wide text-center">
-              How can I help you today?
-            </h2>
-            <p className="text-gray-400 text-center">
-              Enter a prompt below to start &apos;{activeChat?.name || "New Chat"}&apos;.
-            </p>
-          </div>
-          <div className="w-full">
-            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
-          </div>
+          ) : (
+            <AnimatePresence>
+              {messages.map((msg) => (
+                <MessageBubble
+                  key={msg.id}
+                  msg={msg}
+                  copiedText={copiedText}
+                  onCopy={copyToClipboard}
+                  onShare={openShare}
+                  onViewThinking={onViewThinking}
+                />
+              ))}
+            </AnimatePresence>
+          )}
+
+          {/* AI Thinking Bubble */}
+          <AnimatePresence>
+            {isThinking && (
+              <motion.div
+                key="thinking"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="flex gap-4 w-full justify-start items-start"
+              >
+                <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex justify-center items-center shadow-lg shadow-purple-900/30 ring-1 ring-white/10 mt-1">
+                  <Sparkles size={18} className="text-white" />
+                </div>
+                <div className="flex items-center gap-2 px-5 py-4 rounded-2xl rounded-tl-sm">
+                  <LoaderCircle size={18} className="text-gray-800 dark:text-white animate-spin transition-all duration-300" />
+                  <span className="text-gray-800 dark:text-white animate-pulse">Thinking...</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div ref={endOfMessagesRef} className="h-4" />
         </div>
-      ) : (
-        // Active "Ongoing Chat" View
-        <>
-          <div className="flex-1 w-full overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full">
-            <div className="w-full max-w-5xl mx-auto pt-8 pb-8 px-4 flex flex-col gap-6">
-              <AnimatePresence>
-                {messages.map((msg) => (
-                  <MessageBubble
-                    key={msg.id}
-                    msg={msg}
-                    copiedText={copiedText}
-                    onCopy={copyToClipboard}
-                    onShare={openShare}
-                    onViewThinking={onViewThinking}
-                  />
-                ))}
-              </AnimatePresence>
+      </div>
 
-              {/* AI Thinking Bubble */}
-              <AnimatePresence>
-                {isThinking ? (
-                  <motion.div
-                    key="thinking"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="flex gap-4 w-full justify-start"
-                  >
-                    <div className="shrink-0 w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex justify-center items-center shadow-lg shadow-purple-900/30 ring-1 ring-white/10 mt-1">
-                      <Sparkles size={18} className="text-white" />
-                    </div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="flex items-center gap-2"
-                    >
-                      <div className="bg-white w-4 h-4 rounded-full animate-pulse"></div>
-                    </motion.div>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-
-              <div ref={endOfMessagesRef} className="h-4" />
-            </div>
-          </div>
-
-          {/* Sticky bottom input */}
-          <div className="w-full shrink-0 px-4 pb-2 pt-10 bg-gradient-to-t from-[#1E1F22] via-[#1E1F22] to-transparent">
-            <ChatInput onSend={(val) => onSendMessage(val, selectedModel)} disabled={isThinking} selectedModel={selectedModel} setSelectedModel={setSelectedModel} />
-          </div>
-        </>
-      )}
+      {/* Sticky bottom input */}
+      <div className="w-full shrink-0 px-4 pb-4 pt-4 bg-linear-to-t from-white via-white dark:from-[#1E1F22] dark:via-[#1E1F22] to-transparent">
+        <ChatInput
+          onSend={(val, mode) => onSendMessage(val, selectedModel, mode)}
+          disabled={isThinking}
+          selectedModel={selectedModel}
+          setSelectedModel={setSelectedModel}
+        />
+      </div>
 
       {/* Share Modal */}
       <ShareModal
