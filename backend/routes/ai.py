@@ -16,6 +16,7 @@ from typing import Optional
 class ChatRequest(BaseModel):
     message: str
     model: Optional[str] = None
+    mode: Optional[str] = None
 
 def _collect_ollama_chunks(model_to_use: str, messages: list) -> list:
     """Run the blocking ollama stream and collect all chunks synchronously."""
@@ -27,8 +28,18 @@ def _collect_ollama_chunks(model_to_use: str, messages: list) -> list:
 async def stream_ollama_async(request: ChatRequest):
     """Async generator: runs blocking ollama.chat in a thread, then yields processed tokens."""
     model_to_use = request.model or os.getenv("OLLAMA_MODEL") or "llama3"
+    mode = request.mode or "default"
+    
+    if mode == "thinking":
+        custome_msg = "You are a highly analytical assistant. Provide deep, step-by-step reasoning for every query. Wrap your internal thoughts in <think> tags."
+    elif mode == "research":
+        custome_msg = "You are a research expert. Provide comprehensive, well-structured, and verified information. Focus on depth and accuracy."
+    elif mode == "web":
+        custome_msg = "You are an assistant with real-time web access capabilities. Focus on providing up-to-date and relevant information from the web."
+    else:
+        custome_msg = "You are a helpful and concise AI assistant."
     messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "system", "content": custome_msg},
         {"role": "user", "content": request.message},
     ]
     
