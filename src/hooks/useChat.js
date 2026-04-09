@@ -206,11 +206,21 @@ export function useChat() {
             await supabase.from('messages').insert({ chat_id: activeChatId, role: "user", content });
         }
 
+        const history = activeMessages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
+
         try {
             const response = await fetch("http://localhost:8000/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: content, model: selectedModel, mode: responseType }),
+                body: JSON.stringify({ 
+                    message: content, 
+                    model: selectedModel, 
+                    mode: responseType,
+                    history: history 
+                }),
             });
 
             if (!response.ok) throw new Error("AI call failed");
