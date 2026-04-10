@@ -146,7 +146,10 @@ export default function Sidebar({
                   key={project.id}>
                   <SidebarItem
                     label={project.name}
+                    isproject={true}
                     isActive={activeProjectId === project.id}
+                    projctId = {project.id}
+                    onnewprojectchat={onNewProjectChat}
                     icon={FolderClosed}
                     iconColor="text-blue-400"
                     onClick={() => {
@@ -186,11 +189,11 @@ export default function Sidebar({
 
                   {expandedProjects.has(project.id) && (
                     <div className="ml-5 pl-3 border-l border-gray-200 dark:border-white/5 py-1">
-                      {(activeProjectId === project.id || projectChatsProjectId === project.id) && (
+                      {/* {(activeProjectId === project.id || projectChatsProjectId === project.id) && (
                         <button onClick={() => onNewProjectChat(project.id)} className="flex items-center gap-2 w-full mb-2 px-2 py-2 text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 hover:text-gray-900 dark:bg-gray-500/10 dark:hover:bg-white/10 rounded-lg dark:text-gray-300 dark:hover:text-gray-200">
                           <Plus size={12} /> New chat
                         </button>
-                      )}
+                      )} */}
                       {(project.id === projectChatsProjectId ? projectChats : []).map(pc => (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
@@ -203,6 +206,7 @@ export default function Sidebar({
                             label={pc.name}
                             isActive={activeProjectChatId === pc.id}
                             icon={MessageSquare}
+                            isproject={false}
                             iconColor="text-purple-400"
                             onClick={() => setActiveProjectChatId(pc.id, project.id)}
                             onRename={() => { setRenamingId(pc.id); setRenamingValue(pc.name); }}

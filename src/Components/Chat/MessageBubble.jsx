@@ -12,11 +12,11 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
       className={`flex gap-4 w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}
     >
       {/* AI Avatar */}
-      {msg.role === "ai" && (
+      {/* {msg.role === "ai" && (
         <div className="shrink-0 w-9 h-9 rounded-xl bg-linear-to-tr from-purple-600 to-blue-600 flex justify-center items-center shadow-lg shadow-purple-900/30 ring-1 ring-white/10 mt-1">
           <Sparkles size={18} className="text-white" />
         </div>
-      )}
+      )} */}
 
       {/* Message Bubble */}
       <div className="min-w-0 max-w-[75%]">
@@ -62,11 +62,11 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
       </div>
 
       {/* User Avatar */}
-      {msg.role === "user" && (
+      {/* {msg.role === "user" && (
         <div className="shrink-0 w-9 h-9 rounded-xl bg-linear-to-tr from-gray-600 to-gray-700 flex justify-center items-center shadow-md ring-1 ring-white/10 mt-1">
           <User size={18} className="text-white" />
         </div>
-      )}
+      )} */}
     </motion.div>
   );
 });

@@ -52,6 +52,7 @@ const terminalTheme = {
   'pre[class*="language-"]': {
     ...oneDark['pre[class*="language-"]'],
     background: "transparent",
+    overflow: "visible",
     margin: 0,
     padding: "1rem 1.25rem",
     fontSize: "13.5px",
@@ -136,11 +137,11 @@ export default function CodeBlock({ language, children }) {
       {/* ── Code Body ── */}
       <div
         className="relative overflow-x-auto overflow-y-auto max-h-[800px] min-h-[80px] bg-[#1a1b26]
-                   [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5
-                   [&::-webkit-scrollbar-track]:bg-transparent
-                   [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full
-                   hover:[&::-webkit-scrollbar-thumb]:bg-white/20
-                   [&_pre]:m-0! [&_pre]:rounded-none! [&_pre]:bg-transparent!
+                   [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1
+                   [&::-webkit-scrollbar-track]:bg-black/20
+                   [&::-webkit-scrollbar-thumb]:bg-gray-500/30 [&::-webkit-scrollbar-thumb]:rounded-full
+                   hover:[&::-webkit-scrollbar-thumb]:bg-gray-500/50
+                   [&_pre]:m-0! [&_pre]:rounded-none! [&_pre]:bg-transparent! [&_pre]:!overflow-visible
                    [&_code]:bg-transparent!"
       >
         <SyntaxHighlighter
@@ -155,7 +156,7 @@ export default function CodeBlock({ language, children }) {
             textAlign: "right",
             userSelect: "none",
           }}
-          wrapLongLines
+          wrapLongLines={false}
         >
           {code}
         </SyntaxHighlighter>

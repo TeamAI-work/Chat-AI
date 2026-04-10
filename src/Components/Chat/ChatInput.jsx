@@ -44,14 +44,13 @@ const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, set
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto w-full">
-      <div className="bg-white/80 dark:bg-[#2A2B32]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-2 shadow-2xl focus-within:ring-1 focus-within:ring-purple-500/50 transition-all">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="relative flex items-end gap-2"
-        >
+    <div className="max-w-3xl mx-auto w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="bg-white/80 dark:bg-[#2A2B32]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-full px-2 py-1 shadow-2xl focus-within:ring-1 focus-within:ring-purple-500/50 transition-all">
+        <div className="relative flex items-center justify-between gap-2">
           <button
             onClick={() => setUploadModel(!uploadModel)}
             className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-colors shrink-0"
@@ -63,7 +62,7 @@ const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, set
             autoFocus
             rows={1}
             placeholder="Message Chat AI..."
-            className="w-full bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 resize-none outline-none overflow-y-auto max-h-40 min-h-[44px] py-3 text-[15px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full"
+            className="w-full bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 resize-none outline-none overflow-y-auto max-h-40 min-h-[44px] py-2.5 text-[15px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full"
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
@@ -72,7 +71,7 @@ const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, set
           <button
             onClick={handleSend}
             disabled={disabled}
-            className={`p-3 rounded-xl transition-all shadow-lg shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
+            className={` p-2.5 rounded-full flex justify-center items-center transition-all shadow-lg shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
             ${isEmpty || disabled
                 ? "text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 bg-transparent shadow-none"
                 : "text-white bg-linear-to-tr from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 active:scale-95"
@@ -131,7 +130,7 @@ const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, set
               <Globe size={15} /> Web Search
             </div>
           </div>
-        </motion.div>
+        </div>
         {(thinking || deepThinking || webSearch) && (
           <div className="flex justify-start gap-2 shrink mt-2 px-2 pb-1">
             {thinking && (
@@ -154,7 +153,7 @@ const ChatInput = memo(function ChatInput({ onSend, disabled, selectedModel, set
             )}
           </div>
         )}
-      </div>
+      </motion.div>
       <div className="text-center mt-3">
         <span className="text-[11px] text-gray-500 font-medium">
           Chat AI can make mistakes. Consider verifying critical information.

@@ -12,16 +12,28 @@ export function useMarkdownComponents() {
       code({ node, inline, className, children, ...props }) {
         const inTable = useContext(TableContext);
         const match = /language-(\w+)/.exec(className || "");
-        if (!inline || inTable) {
-          const lang = match ? match[1] : "text";
-          return <CodeBlock language={lang}>{children}</CodeBlock>;
+        const lang = match ? match[1] : null;
+        const content = String(children).replace(/\n$/, "");
+        const isOneLine = !content.includes("\n");
+        const isShort = content.length < 60;
+
+        // Force inline rendering for short content even if markdown said it's a block
+        // We do this for plain text, null language, or explicitly marked "text" blocks.
+        const isPlain = !lang || lang === "text" || lang === "markdown" || lang === "txt";
+        const shouldBeInline = inline || (isOneLine && isShort && isPlain);
+
+        // If it's a multi-line block, or a long block, or a labeled language block (not plain),
+        // we use the full CodeBlock.
+        if (!shouldBeInline && (inTable || !inline)) {
+          return <CodeBlock language={lang || "text"}>{children}</CodeBlock>;
         }
+
         return (
           <code
-            className="font-mono text-[0.875em] bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 px-[7px] py-[2px] rounded-[5px] border border-purple-200 dark:border-purple-500/15 font-medium whitespace-nowrap max-h-[100px] overflow-y-auto"
+            className="font-mono text-[0.875em] bg-purple-100 dark:bg-gray-500/50 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-md font-medium break-all"
             {...props}
           >
-            {children}
+            {content}
           </code>
         );
       },

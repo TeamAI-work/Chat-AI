@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 
 export function ActionMenu({ onRename, onDelete }) {
   return (
@@ -26,21 +26,24 @@ export function ActionMenu({ onRename, onDelete }) {
   );
 }
 
-export default function SidebarItem({ 
-    icon: Icon, 
-    label, 
-    isActive, 
-    onClick, 
-    onRename, 
-    onDelete, 
-    children, 
-    className = "",
-    iconColor = "text-purple-400",
-    isRenaming,
-    renamingValue,
-    setRenamingValue,
-    onRenameSubmit,
-    onRenameCancel
+export default function SidebarItem({
+  icon: Icon,
+  label,
+  isActive,
+  onClick,
+  onRename,
+  onDelete,
+  children,
+  className = "",
+  iconColor = "text-purple-400",
+  isRenaming,
+  renamingValue,
+  setRenamingValue,
+  onRenameSubmit,
+  onRenameCancel,
+  onnewprojectchat,
+  projctId,
+  isproject
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -52,7 +55,7 @@ export default function SidebarItem({
       {children}
       <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
         {Icon && <Icon size={15} className={`shrink-0 transition-colors ${isActive ? iconColor : `${iconColor}/70 group-hover:${iconColor}`}`} strokeWidth={2} />}
-        
+
         {isRenaming ? (
           <input
             autoFocus
@@ -74,21 +77,33 @@ export default function SidebarItem({
         )}
       </div>
 
-      <button
-        className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-300 dark:hover:bg-white/10 rounded-lg shrink-0 transition-all text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-        onClick={(e) => {
-          e.stopPropagation();
-          setMenuOpen(!menuOpen);
-        }}
-      >
-        <MoreHorizontal size={15} />
-      </button>
-      
+      <div className="flex justify-center ">
+        {isproject &&
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onnewprojectchat(projctId)
+            }}
+            className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-300 dark:hover:bg-white/10 rounded-lg shrink-0 transition-all text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+            <Plus size={15} />
+          </div>}
+
+        <button
+          className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-gray-300 dark:hover:bg-white/10 rounded-lg shrink-0 transition-all text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuOpen(!menuOpen);
+          }}
+        >
+          <MoreHorizontal size={15} />
+        </button>
+      </div>
+
       <AnimatePresence>
         {menuOpen && (
-          <ActionMenu 
-            onRename={() => { setMenuOpen(false); onRename(); }} 
-            onDelete={() => { setMenuOpen(false); onDelete(); }} 
+          <ActionMenu
+            onRename={() => { setMenuOpen(false); onRename(); }}
+            onDelete={() => { setMenuOpen(false); onDelete(); }}
           />
         )}
       </AnimatePresence>
