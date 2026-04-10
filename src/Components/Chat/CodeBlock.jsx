@@ -106,13 +106,6 @@ export default function CodeBlock({ language, children }) {
         className="flex items-center gap-3 px-4 py-2.5 select-none border-b border-white/6
                    bg-linear-to-b from-white/6 to-white/2"
       >
-        {/* macOS dots */}
-        <div className="flex items-center gap-[7px]">
-          <span className="w-3 h-3 rounded-full bg-[#ff5f56] shadow-[0_0_6px_rgba(255,95,86,0.4)] transition-transform duration-150 hover:scale-125" />
-          <span className="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-[0_0_6px_rgba(255,189,46,0.4)] transition-transform duration-150 hover:scale-125" />
-          <span className="w-3 h-3 rounded-full bg-[#27c93f] shadow-[0_0_6px_rgba(39,201,63,0.4)] transition-transform duration-150 hover:scale-125" />
-        </div>
-
         {/* Language badge */}
         <div
           className="flex items-center gap-1.5 rounded-md border border-white/6 bg-white/4 px-2.5 py-[3px] text-[11.5px] font-medium tracking-[0.3px] font-mono [&>svg]:opacity-70"
