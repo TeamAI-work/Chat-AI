@@ -1,16 +1,18 @@
-import React, {
+import {
   useState,
   useRef,
   useEffect,
-  useCallback,
+  useCallback
 } from "react";
 import {
   Sparkles,
   ChevronDown,
-  Loader,
-  LoaderCircle,
+  LoaderCircle
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence
+} from "framer-motion";
 import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
 import ShareModal from "./ShareModal";
