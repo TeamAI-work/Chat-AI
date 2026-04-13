@@ -142,7 +142,7 @@ export default function Auth() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-primary/50 focus:border-theme-primary/30 transition-all text-sm"
+                                    className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 dark:text-white text-black placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-primary/50 focus:border-theme-primary/30 transition-all text-sm"
                                     placeholder="name@example.com"
                                 />
                             </div>
@@ -156,7 +156,7 @@ export default function Auth() {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-secondary/50 focus:border-theme-secondary/30 transition-all text-sm"
+                                    className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 dark:text-white text-black   placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-secondary/50 focus:border-theme-secondary/30 transition-all text-sm"
                                     placeholder="••••••••"
                                 />
                             </div>

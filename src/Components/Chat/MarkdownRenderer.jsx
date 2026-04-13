@@ -79,7 +79,7 @@ export function useMarkdownComponents() {
         return <td className="px-3 py-2 text-left border-r border-gray-200 dark:border-theme-border last:border-r-0">{children}</td>;
       },
       th({ children }) {
-        return <th className="px-3 py-2 text-left border-r border-gray-200 dark:border-theme-border last:border-r-0 bg-gray-50 dark:bg-white/5 font-semibold text-theme-primary">{children}</th>;
+        return <th className="px-3 py-2 text-left border-r border-gray-200 dark:border-theme-border last:border-r-0 bg-gray-500/2 dark:bg-white/5 font-semibold text-theme-secondary">{children}</th>;
       },
     }),
     []

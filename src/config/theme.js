@@ -4,17 +4,44 @@
 // Works just like models.js — one file, one source of truth.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// GREEN
+// export const THEME = {
+//   light: {
+//     "bg":             "#f6f6f6",      // main page background
+//     "bg-deep":        "#f5f5f5",      // sidebar, deep panels
+//     "surface":        "#f2f2f2",      // cards, elevated areas
+//     "text":           "#000000",      // primary text
+//     "muted":          "#6b7280",      // secondary/muted text
+//     "primary":        "#015958",      // primary accent (buttons, links, icons)
+//     "secondary":      "#0CABA8",      // secondary accent (gradients, highlights)
+//     "border":         "#0FC2C0",      // standard borders & dividers
+//     "border-accent":  "#023535",      // accent borders (emphasized elements)
+//   },
+//   dark: {
+//     "bg":             "#18191D",      // main page background
+//     "bg-deep":        "#0F0F12",      // sidebar, deep panels
+//     "surface":        "#25262D",      // cards, elevated areas
+//     "text":           "#ffffff",      // primary text
+//     "muted":          "#9ca3af",      // secondary/muted text
+//     "primary":        "#015958",      // primary accent
+//     "secondary":      "#0CABA8",      // secondary accent
+//     "border":         "#023535", // standard borders
+//     "border-accent":  "#ffffff",      // accent borders
+//   }
+// };
+
+//ORANGE
 export const THEME = {
   light: {
-    "bg":             "#ffffff",      // main page background
+    "bg":             "#f6f6f6",      // main page background
     "bg-deep":        "#f5f5f5",      // sidebar, deep panels
-    "surface":        "#f5f5f5",      // cards, elevated areas
+    "surface":        "#f2f2f2",      // cards, elevated areas
     "text":           "#000000",      // primary text
     "muted":          "#6b7280",      // secondary/muted text
-    "primary":        "#1BD096",      // primary accent (buttons, links, icons)
-    "secondary":      "#38E5AE",      // secondary accent (gradients, highlights)
-    "border":         "#e5e7eb",      // standard borders & dividers
-    "border-accent":  "#0F7555",      // accent borders (emphasized elements)
+    "primary":        "#015958",      // primary accent (buttons, links, icons)
+    "secondary":      "#0CABA8",      // secondary accent (gradients, highlights)
+    "border":         "#0FC2C0",      // standard borders & dividers
+    "border-accent":  "#023535",      // accent borders (emphasized elements)
   },
   dark: {
     "bg":             "#18191D",      // main page background
@@ -22,10 +49,10 @@ export const THEME = {
     "surface":        "#25262D",      // cards, elevated areas
     "text":           "#ffffff",      // primary text
     "muted":          "#9ca3af",      // secondary/muted text
-    "primary":        "#1BD096",      // primary accent
-    "secondary":      "#38E5AE",      // secondary accent
-    "border":         "rgba(255,255,255,0.05)", // standard borders
-    "border-accent":  "#0F7555",      // accent borders
+    "primary":        "#015958",      // primary accent
+    "secondary":      "#0CABA8",      // secondary accent
+    "border":         "#023535", // standard borders
+    "border-accent":  "#ffffff",      // accent borders
   }
 };
 
