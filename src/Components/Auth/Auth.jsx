@@ -36,11 +36,11 @@ export default function Auth() {
                 })
                 if (signInError) throw signInError
 
-                const { data: user } = await supabase.auth.getUser()
+                const { data: { user: currentUser } } = await supabase.auth.getUser()
                 const { error: profileError } = await supabase
                     .from('users')
                     .insert({
-                        user_id: user.id,
+                        user_id: currentUser.id,
                         username: username,
                     })
 
@@ -62,10 +62,10 @@ export default function Auth() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[#202123] p-4 relative overflow-hidden font-sans selection:bg-purple-500/30">
+        <div className="flex min-h-screen items-center justify-center bg-theme-bg p-4 relative overflow-hidden font-sans selection:bg-theme-primary/30">
             {/* Ambient Background Glows */}
-            <div className="absolute top-0 left-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-0 left-[-10%] w-[50%] h-[50%] bg-theme-primary/10 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-theme-secondary/10 rounded-full blur-[120px] pointer-events-none" />
 
             <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -75,19 +75,19 @@ export default function Auth() {
             >
                 {/* Logo & Headline */}
                 <div className="flex flex-col items-center justify-center mb-8">
-                    <div className="bg-gradient-to-tr from-purple-500 to-blue-500 p-3.5 rounded-2xl mb-4 shadow-xl shadow-purple-500/20 ring-1 ring-white/10">
+                    <div className="bg-gradient-to-tr from-theme-primary to-theme-secondary p-3.5 rounded-2xl mb-4 shadow-xl shadow-theme-primary/20 ring-1 ring-white/10">
                         <Sparkles size={32} className="text-white" />
                     </div>
-                    <h1 className="text-3xl font-light text-white tracking-wide">
+                    <h1 className="text-3xl font-light text-theme-text tracking-wide">
                         {isSignUp ? "Create an Account" : "Welcome Back"}
                     </h1>
-                    <p className="text-gray-400 mt-2 text-sm">
+                    <p className="text-theme-muted mt-2 text-sm">
                         {isSignUp ? "Join Invixa AI and start building today." : "Log in to access your projects and chats."}
                     </p>
                 </div>
 
                 {/* Main Auth Card */}
-                <div className="bg-[#2A2B32]/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+                <div className="bg-theme-surface/60 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
                     <form onSubmit={handleAuth} className="space-y-5">
 
                         {/* Auth Feedback Banners */}
@@ -120,14 +120,14 @@ export default function Auth() {
                                 isSignUp && (
                                     <div className="relative group">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <User size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                                            <User size={18} className="text-gray-500 group-focus-within:text-theme-primary transition-colors" />
                                         </div>
                                         <input
                                             type="text"
                                             required
                                             value={username}
                                             onChange={(e) => setUsername(e.target.value)}
-                                            className="w-full bg-[#1E1F22] border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/30 transition-all text-sm"
+                                            className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-primary/50 focus:border-theme-primary/30 transition-all text-sm"
                                             placeholder="Username"
                                         />
                                     </div>
@@ -135,28 +135,28 @@ export default function Auth() {
                             }
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Mail size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                                    <Mail size={18} className="text-gray-500 group-focus-within:text-theme-primary transition-colors" />
                                 </div>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-[#1E1F22] border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500/30 transition-all text-sm"
+                                    className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-primary/50 focus:border-theme-primary/30 transition-all text-sm"
                                     placeholder="name@example.com"
                                 />
                             </div>
 
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock size={18} className="text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                                    <Lock size={18} className="text-gray-500 group-focus-within:text-theme-secondary transition-colors" />
                                 </div>
                                 <input
                                     type="password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-[#1E1F22] border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/30 transition-all text-sm"
+                                    className="w-full bg-theme-surface border border-white/5 rounded-xl py-3 pl-11 pr-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-theme-secondary/50 focus:border-theme-secondary/30 transition-all text-sm"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -166,7 +166,7 @@ export default function Auth() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full relative flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl py-3 font-medium transition-all shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 group"
+                            className="w-full relative flex items-center justify-center gap-2 bg-gradient-to-r from-theme-primary to-theme-secondary hover:brightness-110 text-white rounded-xl py-3 font-medium transition-all shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 group"
                         >
                             {loading ? (
                                 <Loader2 size={18} className="animate-spin" />
@@ -190,7 +190,7 @@ export default function Auth() {
                                     setMessage(null)
                                     setPassword('')
                                 }}
-                                className="text-purple-400 hover:text-purple-300 font-medium transition-colors focus:outline-none"
+                                className="text-theme-primary hover:text-theme-secondary font-medium transition-colors focus:outline-none"
                             >
                                 {isSignUp ? "Sign in" : "Sign up"}
                             </button>

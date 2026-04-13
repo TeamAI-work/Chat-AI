@@ -22,16 +22,16 @@ export default function ChatPage() {
         ? projects.find(p => p.id === activeProjectId) || null
         : chats.find(c => c.id === activeChatId) || null;
 
-    if (!user) return <div className="h-screen w-screen bg-white dark:bg-[#202123]" />;
+    if (!user) return <div className="h-screen w-screen bg-theme-bg" />;
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-white dark:bg-[#202123] text-gray-900 dark:text-gray-100 font-sans selection:bg-purple-500/30">
+        <div className="flex h-screen w-screen overflow-hidden bg-theme-bg text-theme-text font-sans selection:bg-theme-primary/30">
             {/* Sidebar Container */}
             <motion.div
                 initial={{ width: sidebarOpen ? 280 : 72 }}
                 animate={{ width: sidebarOpen ? 280 : 72 }}
                 transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
-                className="relative bg-gray-50 dark:bg-[#0F0F12] shadow-2xl z-20 border-r border-gray-200 dark:border-white/5 flex-shrink-0 flex flex-col overflow-hidden"
+                className="relative bg-theme-bg-deep shadow-2xl z-20 border-r border-theme-border flex-shrink-0 flex flex-col overflow-hidden"
             >
                 <AnimatePresence mode="wait">
                     {sidebarOpen ? (
@@ -77,12 +77,12 @@ export default function ChatPage() {
                                 onClick={() => setSidebarOpen(true)}
                                 onMouseEnter={() => setHoverIcon(true)}
                                 onMouseLeave={() => setHoverIcon(false)}
-                                className="p-3 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 flex items-center justify-center bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/5 shadow-sm"
+                                className="p-3 rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 text-theme-muted hover:text-theme-text transition-all active:scale-95 flex items-center justify-center bg-gray-100 dark:bg-white/5 border border-theme-border shadow-sm"
                             >
                                 <AnimatePresence mode="wait">
                                     {hoverIcon ? (
                                         <motion.div key="sparkle" initial={{ opacity: 0, scale: 0.8, rotate: -45 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.8, rotate: 45 }} transition={{ duration: 0.15 }}>
-                                            <Sparkle size={20} className="text-purple-400" />
+                                            <Sparkle size={20} className="text-theme-primary" />
                                         </motion.div>
                                     ) : (
                                         <motion.div key="menu" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.15 }}>
@@ -97,7 +97,7 @@ export default function ChatPage() {
             </motion.div>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-[#1E1F22] dark:to-[#25262B] relative shadow-inner">
+            <div className="flex-1 flex overflow-hidden bg-gradient-to-br from-theme-bg to-theme-surface relative shadow-inner">
                 <div className="flex-1 flex flex-col relative overflow-hidden">
                     <Chat
                         activeChat={activeChat}
@@ -121,7 +121,7 @@ export default function ChatPage() {
                             animate={{ width: 360, opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
                             transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1.0] }}
-                            className="shrink-0 h-full border-l border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#14141a] overflow-hidden shadow-2xl z-10"
+                            className="shrink-0 h-full border-l border-theme-border bg-theme-bg-deep overflow-hidden shadow-2xl z-10"
                         >
                             <ThinkingModel text={storedThinkingText} isStreaming={isThinking} onClose={() => setThinkngText("")} />
                         </motion.div>

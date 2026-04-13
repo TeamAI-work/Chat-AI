@@ -24,7 +24,7 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
         {msg.role === "ai" && msg.thinking && (
           <button
             onClick={() => onViewThinking?.(msg.thinking)}
-            className="mb-2 flex items-center gap-1.5 text-[12px] text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 px-3 py-1 rounded-full transition-all group"
+            className="mb-2 flex items-center gap-1.5 text-[12px] text-theme-primary hover:text-theme-secondary bg-theme-primary/10 hover:bg-theme-primary/20 border border-theme-primary/20 hover:border-theme-primary/40 px-3 py-1 rounded-full transition-all group"
           >
             <BrainCircuit size={12} className="group-hover:rotate-12 transition-transform" />
             View thinking
@@ -34,7 +34,7 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
         <div
           className={`px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed shadow-sm w-full overflow-x-auto
             ${msg.role === "user"
-              ? "bg-linear-to-br from-gray-100 to-gray-200 dark:from-[#2D2E36] dark:to-[#25262B] text-gray-900 dark:text-gray-100 rounded-tr-sm border border-gray-300 dark:border-white/5"
+              ? "bg-linear-to-br from-gray-100 to-gray-200 dark:from-theme-surface dark:to-theme-surface text-gray-900 dark:text-gray-100 rounded-tr-sm border border-gray-300 dark:border-theme-border"
               : "text-gray-900 dark:text-gray-200 rounded-tl-sm"
             }`}
         >
@@ -45,14 +45,14 @@ const MessageBubble = memo(function MessageBubble({ msg, copiedText, onCopy, onS
 
         <div className="mt-2 flex gap-1">
           <button
-            className="p-2 rounded-xl transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+            className="p-2 rounded-xl transition-all text-gray-400 hover:text-theme-text hover:bg-gray-100 dark:hover:bg-white/5"
             onClick={() => onCopy(msg.content, msg.id)}
             title="Copy message"
           >
             {copiedText === msg.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
           </button>
           <button
-            className="p-2 rounded-xl transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+            className="p-2 rounded-xl transition-all text-gray-400 hover:text-theme-text hover:bg-gray-100 dark:hover:bg-white/5"
             onClick={onShare}
             title="Share message"
           >

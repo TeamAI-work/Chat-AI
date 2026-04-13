@@ -8,7 +8,7 @@ export function ActionMenu({ onRename, onDelete }) {
       initial={{ opacity: 0, scale: 0.95, y: -5 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: -5 }}
-      className="absolute top-8 right-0 bg-white dark:bg-[#2A2B32] text-sm text-gray-800 dark:text-gray-200 p-1.5 rounded-xl shadow-xl border border-gray-200 dark:border-white/10 w-32 flex flex-col gap-1 z-50 origin-top-right backdrop-blur-md"
+      className="absolute top-8 right-0 bg-white dark:bg-theme-surface text-sm text-gray-800 dark:text-gray-200 p-1.5 rounded-xl shadow-xl border border-gray-200 dark:border-theme-border w-32 flex flex-col gap-1 z-50 origin-top-right backdrop-blur-md"
     >
       <button
         onClick={(e) => { e.stopPropagation(); onRename(); }}
@@ -51,7 +51,7 @@ export default function SidebarItem({
   return (
     <div
       onClick={onClick}
-      className={`group flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-white/5 w-full py-2 px-2 rounded-xl transition-colors relative ${isActive ? 'bg-gray-200 dark:bg-white/10 ring-1 ring-gray-300 dark:ring-white/10' : ''} ${className}`}
+      className={`group flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-white/5 w-full py-2 px-2 rounded-xl transition-colors relative ${isActive ? 'bg-gray-200 dark:bg-white/10 ring-1 ring-gray-300 dark:ring-theme-border' : ''} ${className}`}
     >
       {children}
       <div className="flex items-center gap-2 flex-1 min-w-0 pr-1">
@@ -60,7 +60,7 @@ export default function SidebarItem({
         {isRenaming ? (
           <input
             autoFocus
-            className="outline-none bg-transparent w-full truncate cursor-text text-sm text-gray-900 dark:text-white border-b border-purple-500/50 pb-px"
+            className="outline-none bg-transparent w-full truncate cursor-text text-sm text-gray-900 dark:text-white border-b border-theme-primary/50 pb-px"
             type="text"
             value={renamingValue}
             onChange={(e) => setRenamingValue(e.target.value)}

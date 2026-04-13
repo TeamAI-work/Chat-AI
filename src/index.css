@@ -2,3 +2,49 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ─── Theme Color Variables ───────────────────────────────────────────────────
+   Fallback defaults — overridden at runtime by theme.js applyTheme().
+   These ensure no flash of unstyled content before JS loads.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --theme-bg:            #ffffff;
+  --theme-bg-deep:       #f5f5f5;
+  --theme-surface:       #f5f5f5;
+  --theme-text:          #000000;
+  --theme-muted:         #6b7280;
+  --theme-primary:       #1BD096;
+  --theme-secondary:     #38E5AE;
+  --theme-border:        #e5e7eb;
+  --theme-border-accent: #0F7555;
+}
+
+.dark {
+  --theme-bg:            #18191D;
+  --theme-bg-deep:       #0F0F12;
+  --theme-surface:       #25262D;
+  --theme-text:          #ffffff;
+  --theme-muted:         #9ca3af;
+  --theme-primary:       #1BD096;
+  --theme-secondary:     #38E5AE;
+  --theme-border:        rgba(255, 255, 255, 0.05);
+  --theme-border-accent: #0F7555;
+}
+
+/* ─── Register Theme Colors with Tailwind ─────────────────────────────────────
+   This lets you use classes like: bg-theme-bg, text-theme-primary,
+   border-theme-border, from-theme-primary, etc.
+   Opacity modifiers work too: bg-theme-primary/30, text-theme-muted/80
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  --color-theme-bg:            var(--theme-bg);
+  --color-theme-bg-deep:       var(--theme-bg-deep);
+  --color-theme-surface:       var(--theme-surface);
+  --color-theme-text:          var(--theme-text);
+  --color-theme-muted:         var(--theme-muted);
+  --color-theme-primary:       var(--theme-primary);
+  --color-theme-secondary:     var(--theme-secondary);
+  --color-theme-border:        var(--theme-border);
+  --color-theme-border-accent: var(--theme-border-accent);
+}

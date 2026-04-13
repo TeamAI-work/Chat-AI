@@ -93,8 +93,8 @@ export default function ShareModal({ isOpen, onClose, chatId, chatTitle }) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Ambient glow blobs */}
-            <div className="pointer-events-none absolute -top-1/2 -left-[30%] w-4/5 h-4/5 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.08),transparent_70%)]" />
-            <div className="pointer-events-none absolute -bottom-2/5 -right-1/5 w-3/5 h-3/5 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.06),transparent_70%)]" />
+            <div className="pointer-events-none absolute -top-1/2 -left-[30%] w-4/5 h-4/5 rounded-full bg-[radial-gradient(circle,rgba(27,208,150,0.08),transparent_70%)]" />
+            <div className="pointer-events-none absolute -bottom-2/5 -right-1/5 w-3/5 h-3/5 rounded-full bg-[radial-gradient(circle,rgba(56,229,174,0.06),transparent_70%)]" />
 
             {/* ── Header ── */}
             <div className="relative z-10 flex items-center justify-between mb-6">
@@ -122,7 +122,7 @@ export default function ShareModal({ isOpen, onClose, chatId, chatTitle }) {
                 className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white cursor-pointer transition-all duration-200
                   ${linkCopied
                     ? "bg-gradient-to-br from-emerald-600 to-emerald-500 shadow-[0_4px_16px_rgba(16,185,129,0.3)]"
-                    : "bg-gradient-to-br from-violet-600 to-indigo-500 shadow-[0_4px_16px_rgba(124,58,237,0.3)] hover:from-violet-700 hover:to-indigo-600 hover:shadow-[0_6px_24px_rgba(124,58,237,0.4)] hover:-translate-y-px active:scale-[0.97] active:translate-y-0"
+                    : "bg-gradient-to-br from-theme-primary to-theme-secondary shadow-[0_4px_16px_rgba(27,208,150,0.3)] hover:brightness-110 hover:shadow-[0_6px_24px_rgba(27,208,150,0.4)] hover:-translate-y-px active:scale-[0.97] active:translate-y-0"
                   }`}
               >
                 {linkCopied ? <><Check size={14} /> Copied!</> : "Copy link"}
