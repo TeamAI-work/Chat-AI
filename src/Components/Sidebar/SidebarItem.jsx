@@ -43,7 +43,8 @@ export default function SidebarItem({
   onRenameCancel,
   onnewprojectchat,
   projctId,
-  isproject
+  isproject,
+  isExpanded
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -78,7 +79,7 @@ export default function SidebarItem({
       </div>
 
       <div className="flex justify-center ">
-        {isproject &&
+        {isproject && isExpanded &&
           <div
             onClick={(e) => {
               e.stopPropagation();

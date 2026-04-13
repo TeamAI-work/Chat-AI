@@ -42,7 +42,7 @@ export default function Sidebar({
   const filteredProjects = searchLower ? projects.filter(p => p.name?.toLowerCase().includes(searchLower)) : projects;
 
   useEffect(() => {
-    if (activeProjectId) setExpandedProjects(prev => new Set([...prev, activeProjectId]));
+    if (activeProjectId) setExpandedProjects(new Set([activeProjectId]));
   }, [activeProjectId]);
 
   const handleRename = async ({ projectId, chatId, projectChatId, newname }) => {
@@ -147,6 +147,7 @@ export default function Sidebar({
                   <SidebarItem
                     label={project.name}
                     isproject={true}
+                    isExpanded={expandedProjects.has(project.id)}
                     isActive={activeProjectId === project.id}
                     projctId = {project.id}
                     onnewprojectchat={onNewProjectChat}
@@ -154,11 +155,7 @@ export default function Sidebar({
                     iconColor="text-blue-400"
                     onClick={() => {
                       const isExpanding = !expandedProjects.has(project.id);
-                      setExpandedProjects(prev => {
-                        const next = new Set(prev);
-                        if (next.has(project.id)) next.delete(project.id); else next.add(project.id);
-                        return next;
-                      });
+                      setExpandedProjects(isExpanding ? new Set([project.id]) : new Set());
                       setActiveProjectId(project.id);
                       setActiveChatId(null);
                       if (isExpanding) fetchProjectChats(project.id);
@@ -174,11 +171,7 @@ export default function Sidebar({
                     <button onClick={(e) => {
                       e.stopPropagation();
                       const isExpanding = !expandedProjects.has(project.id);
-                      setExpandedProjects(prev => {
-                        const next = new Set(prev);
-                        if (next.has(project.id)) next.delete(project.id); else next.add(project.id);
-                        return next;
-                      });
+                      setExpandedProjects(isExpanding ? new Set([project.id]) : new Set());
                       if (isExpanding) {
                         fetchProjectChats(project.id);
                       }

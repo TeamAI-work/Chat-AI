@@ -62,7 +62,7 @@ export function useChat() {
 
     const fetchProjectChats = async (projectId) => {
         if (!projectId) return;
-        const { data, error } = await supabase
+        const { data, error } = await supabase  
             .from('project-chats')
             .select('id, name, created_at')
             .eq('project_id', projectId)

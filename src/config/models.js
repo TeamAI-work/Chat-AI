@@ -28,6 +28,6 @@ export const DEFAULT_MODEL = MODELS[0];
 export const FEATURE_MODELS = {
   THINKING: "glm-5.1:cloud",
   RESEARCH: "deepseek-v3.1:671b-cloud",
-  WEB_SEARCH: "deepseek-v3.1:671b-cloud",
+  WEB_SEARCH: "gpt-oss:120b-cloud",
   DEFAULT: "deepseek-v3.1:671b-cloud"
 };
